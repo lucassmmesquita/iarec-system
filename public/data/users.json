@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "name": "Admin Sistema",
+    "email": "admin@shopinfo.com",
+    "password": "admin123",
+    "role": "Administrador",
+    "status": "Ativo",
+    "lastAccess": "14/10/2025 09:30"
+  },
+  {
+    "id": 2,
+    "name": "Maria Santos",
+    "email": "maria.santos@shopinfo.com",
+    "password": "123456",
+    "role": "Vendedor",
+    "status": "Ativo",
+    "lastAccess": "14/10/2025 08:15"
+  },
+  {
+    "id": 3,
+    "name": "Pedro Costa",
+    "email": "pedro.costa@shopinfo.com",
+    "password": "123456",
+    "role": "Vendedor",
+    "status": "Ativo",
+    "lastAccess": "13/10/2025 17:45"
+  },
+  {
+    "id": 4,
+    "name": "Ana Oliveira",
+    "email": "ana.oliveira@shopinfo.com",
+    "password": "123456",
+    "role": "Supervisor",
+    "status": "Ativo",
+    "lastAccess": "14/10/2025 10:00"
+  },
+  {
+    "id": 5,
+    "name": "Carlos Mendes",
+    "email": "carlos.mendes@shopinfo.com",
+    "password": "123456",
+    "role": "Vendedor",
+    "status": "Inativo",
+    "lastAccess": "10/10/2025 16:20"
+  }
+]
