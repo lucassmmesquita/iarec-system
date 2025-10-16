@@ -2,26 +2,3 @@ Flask==3.0.0
 Flask-CORS==4.0.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
-```
-
-### Arquivo 3: `backend/Procfile`
-```
-web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
-```
-
-### Arquivo 4: `backend/runtime.txt`
-```
-python-3.11.6
-```
-
-### Arquivo 5: `backend/.gitignore`
-```
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
-*.db
-venv/
-.vscode/
-.idea/
