@@ -43,5 +43,14 @@
     "role": "Vendedor",
     "status": "Inativo",
     "lastAccess": "10/10/2025 16:20"
+  },
+  {
+    "id": 6,
+    "name": "Teste do Teste",
+    "email": "teste@teste.com",
+    "password": "123",
+    "role": "Administrador",
+    "status": "Ativo",
+    "lastAccess": "10/10/2025 16:20"
   }
 ]
