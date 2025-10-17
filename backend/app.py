@@ -113,7 +113,7 @@ def index():
 def health():
     """Health check para Elastic Beanstalk"""
     return jsonify({
-        'status': 'healthy',
+        'status': 'ok',
         'timestamp': datetime.now().isoformat()
     }), 200
 

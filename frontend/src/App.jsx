@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/auth/Login.jsx';
-import Dashboard from './components/auth/Dashboard.jsx';
+import AdminLayout from './components/layout/AdminLayout.jsx';
 import UserManagement from './components/admin/UserManagement.jsx';
+import DataSourceManager from './components/admin/DataSourceManager.jsx';
+import RelatoriosPage from './components/pages/RelatoriosPage.jsx';
+import ValidacaoRecomendacoesPage from './components/pages/ValidacaoRecomendacoesPage.jsx'; // ← ADICIONAR
 import authService from './services/authService';
 import storageService from './services/storageService';
 
@@ -10,28 +13,17 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // Inicializar storage
     storageService.initialize();
-
-    // Verificar se já existe usuário logado
     const user = authService.getCurrentUser();
     if (user) {
       setCurrentUser(user);
-      if (user.role === 'Administrador') {
-        setCurrentView('admin');
-      } else {
-        setCurrentView('dashboard');
-      }
+      setCurrentView('admin');
     }
   }, []);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    if (user.role === 'Administrador') {
-      setCurrentView('admin');
-    } else {
-      setCurrentView('dashboard');
-    }
+    setCurrentView('admin');
   };
 
   const handleLogout = () => {
@@ -40,17 +32,21 @@ function App() {
     setCurrentView('login');
   };
 
-  // Renderizar baseado na view atual
   if (currentView === 'login') {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (currentView === 'dashboard') {
-    return <Dashboard user={currentUser} onLogout={handleLogout} />;
-  }
-
   if (currentView === 'admin') {
-    return <UserManagement currentUser={currentUser} onLogout={handleLogout} />;
+    return (
+      <AdminLayout 
+        currentUser={currentUser} 
+        onLogout={handleLogout}
+        UserManagementComponent={UserManagement}
+        DataSourceManagerComponent={DataSourceManager}
+        RelatoriosComponent={RelatoriosPage}
+        ValidacaoComponent={ValidacaoRecomendacoesPage}  
+      />
+    );
   }
 
   return null;

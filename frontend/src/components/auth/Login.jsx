@@ -16,7 +16,7 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     if (!loginData.email || !loginData.password) {
-      setError('Por favor, preencha todos os campos');
+      setError('Por favor, preencha todos os campos !!!');
       setLoading(false);
       return;
     }
