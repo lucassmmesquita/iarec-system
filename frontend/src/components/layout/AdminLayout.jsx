@@ -21,7 +21,10 @@ const AdminLayout = ({
   UserManagementComponent, 
   DataSourceManagerComponent,
   RelatoriosComponent,
-  ValidacaoComponent 
+  ValidacaoComponent,
+  ImportacaoComponent,
+  ProcessamentoComponent,
+  TreinamentoComponent
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState('usuarios');
@@ -146,46 +149,20 @@ const AdminLayout = ({
     if (currentPage === 'validacao' && ValidacaoComponent) {
         return <ValidacaoComponent />;  // ← ADICIONADO
     }
+    if (currentPage === 'importacao' && ImportacaoComponent) {
+      return <ImportacaoComponent />;
+    }
+    if (currentPage === 'processamento' && ProcessamentoComponent) {
+        return <ProcessamentoComponent />;
+    }
+    if (currentPage === 'treinamento' && TreinamentoComponent) {
+        return <TreinamentoComponent />;
+    }
 
     // Páginas em desenvolvimento - mostram placeholder
     const pageInfo = {
+     
       
-      importacao: {
-        title: 'Importação de Dados Históricos',
-        description: 'Upload e processamento de dados de vendas anteriores',
-        icon: Upload,
-        features: [
-          'Upload de arquivos CSV/Excel',
-          'Importação direta de bancos de dados',
-          'Mapeamento de campos',
-          'Validação de dados',
-          'Processamento em background'
-        ]
-      },
-      processamento: {
-        title: 'Processamento de Informações',
-        description: 'Pipeline de ETL e preparação de dados',
-        icon: Cpu,
-        features: [
-          'Limpeza e normalização de dados',
-          'Feature engineering',
-          'Agregação de múltiplas fontes',
-          'Transformações customizadas',
-          'Monitoramento do pipeline'
-        ]
-      },
-      treinamento: {
-        title: 'Treinamento de Modelo de Dados',
-        description: 'Configuração e execução do treinamento do modelo de IA',
-        icon: Brain,
-        features: [
-          'Algoritmos de recomendação (Collaborative Filtering)',
-          'Ajuste de hiperparâmetros',
-          'Validação cruzada',
-          'Métricas de performance (Precision, Recall)',
-          'Versionamento de modelos'
-        ]
-      }
     };
 
     const info = pageInfo[currentPage];

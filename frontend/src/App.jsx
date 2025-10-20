@@ -5,6 +5,9 @@ import UserManagement from './components/admin/UserManagement.jsx';
 import DataSourceManager from './components/admin/DataSourceManager.jsx';
 import RelatoriosPage from './components/pages/RelatoriosPage.jsx';
 import ValidacaoRecomendacoesPage from './components/pages/ValidacaoRecomendacoesPage.jsx'; // ← ADICIONAR
+import ImportacaoDadosHistoricos from './components/recomendador/ImportacaoDadosHistoricos.jsx';
+import ProcessamentoInformacoes from './components/recomendador/ProcessamentoInformacoes.jsx';
+import TreinamentoModeloIA from './components/recomendador/TreinamentoModeloIA.jsx';
 import authService from './services/authService';
 import storageService from './services/storageService';
 
@@ -45,6 +48,9 @@ function App() {
         DataSourceManagerComponent={DataSourceManager}
         RelatoriosComponent={RelatoriosPage}
         ValidacaoComponent={ValidacaoRecomendacoesPage}  
+        ImportacaoComponent={ImportacaoDadosHistoricos}  
+        ProcessamentoComponent={ProcessamentoInformacoes}
+        TreinamentoComponent={TreinamentoModeloIA}
       />
     );
   }
