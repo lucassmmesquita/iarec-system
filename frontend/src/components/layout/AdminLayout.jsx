@@ -12,8 +12,18 @@ import {
   ChevronDown,
   ChevronRight,
   Menu,
-  X
+  X,
+  Home,
+  Search,
+  MessageSquare,
+  Mail
 } from 'lucide-react';
+
+// Importar componentes do App do Vendedor
+import VendedorDashboard from '../vendedor/VendedorDashboard';
+import VendedorConsulta from '../vendedor/VendedorConsulta';
+import VendedorFeedback from '../vendedor/VendedorFeedback';
+import VendedorEmail from '../vendedor/VendedorEmail';
 
 const AdminLayout = ({ 
   currentUser, 
@@ -27,10 +37,11 @@ const AdminLayout = ({
   TreinamentoComponent
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState('usuarios');
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const [expandedSections, setExpandedSections] = useState({
     admin: true,
-    recomendador: true
+    recomendador: true,
+    vendedor: true
   });
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -53,6 +64,19 @@ const AdminLayout = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Definir página inicial baseada no perfil
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'Vendedor') {
+        setCurrentPage('vendedor-home');
+      } else if (currentUser.role === 'Supervisor') {
+        setCurrentPage('fontes');
+      } else {
+        setCurrentPage('usuarios');
+      }
+    }
+  }, [currentUser]);
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -71,6 +95,73 @@ const AdminLayout = ({
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // ============================================
+  // REGRAS DE CONTROLE DE ACESSO POR PERFIL
+  // ============================================
+  
+  const hasAccess = (menuId) => {
+    if (!currentUser) return false;
+
+    const userRole = currentUser.role;
+
+    // 1. Administrador: acesso TOTAL a todos os módulos
+    if (userRole === 'Administrador') {
+      return true;
+    }
+
+    // 2. Supervisor: acesso aos módulos Admin (exceto Usuários) + Recomendador
+    if (userRole === 'Supervisor') {
+      const supervisorMenus = [
+        // Módulo de Administração (SEM Gestão de Usuários)
+        'fontes',           // Gestão de Fontes de Dados
+        'relatorios',       // Consultas e Relatórios
+        'validacao',        // Validação de Recomendações
+        // Módulo Recomendador
+        'importacao',       // Importação de Dados
+        'processamento',    // Processamento de Dados
+        'treinamento'       // Treinamento do Modelo
+      ];
+      return supervisorMenus.includes(menuId);
+    }
+
+    // 3. Vendedor: acesso SOMENTE ao App do Vendedor
+    if (userRole === 'Vendedor') {
+      const vendedorMenus = [
+        'vendedor-home',      // Home com Dashboard e Indicadores
+        'vendedor-consulta',  // Consulta e resultados do Recomendador
+        'vendedor-feedback',  // Feedback da recomendação gerada
+        'vendedor-email'      // Envio por email da recomendação gerada
+      ];
+      return vendedorMenus.includes(menuId);
+    }
+
+    return false;
+  };
+
+  const canAccessSection = (sectionId) => {
+    if (!currentUser) return false;
+
+    const userRole = currentUser.role;
+
+    if (userRole === 'Administrador') {
+      return true;
+    }
+
+    if (userRole === 'Supervisor') {
+      return sectionId === 'admin' || sectionId === 'recomendador';
+    }
+
+    if (userRole === 'Vendedor') {
+      return sectionId === 'vendedor';
+    }
+
+    return false;
+  };
+
+  // ============================================
+  // ESTRUTURA DE MENUS
+  // ============================================
+
   const menuSections = [
     {
       id: 'admin',
@@ -81,14 +172,12 @@ const AdminLayout = ({
           id: 'usuarios',
           label: 'Gestão de Usuários',
           icon: Users,
-          //badge: '12',
           description: 'Controle de acessos e permissões'
         },
         {
           id: 'fontes',
           label: 'Gestão de Fontes de Dados',
           icon: Database,
-          //badge: 'NOVO',
           badgeColor: 'green',
           description: 'Cadastro e conexões com bases de dados'
         },
@@ -130,242 +219,269 @@ const AdminLayout = ({
           description: 'IA e aprendizado de máquina'
         }
       ]
+    },
+    {
+      id: 'vendedor',
+      title: 'App do Vendedor',
+      icon: Users,
+      items: [
+        {
+          id: 'vendedor-home',
+          label: 'Dashboard',
+          icon: Home,
+          description: 'Indicadores e métricas principais'
+        },
+        {
+          id: 'vendedor-consulta',
+          label: 'Consulta de Recomendações',
+          icon: Search,
+          description: 'Buscar produtos recomendados'
+        },
+        {
+          id: 'vendedor-feedback',
+          label: 'Feedback de Recomendações',
+          icon: MessageSquare,
+          description: 'Avaliar resultados do recomendador'
+        },
+        {
+          id: 'vendedor-email',
+          label: 'Envio por E-mail',
+          icon: Mail,
+          description: 'Compartilhar recomendações com clientes'
+        }
+      ]
     }
   ];
 
+  // Filtrar seções e itens baseado no perfil
+  const filteredMenuSections = menuSections
+    .filter(section => canAccessSection(section.id))
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => hasAccess(item.id))
+    }))
+    .filter(section => section.items.length > 0);
+
   const renderPageContent = () => {
-    // Páginas implementadas - chamam componentes externos
+    // Verificar acesso antes de renderizar
+    if (!hasAccess(currentPage)) {
+      return (
+        <div className="p-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-900 mb-2">Acesso Negado</h2>
+            <p className="text-red-700">
+              Você não tem permissão para acessar esta página.
+            </p>
+            <p className="text-sm text-red-600 mt-2">
+              Perfil atual: <strong>{currentUser?.role}</strong>
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ========== PÁGINAS DO MÓDULO ADMINISTRAÇÃO ==========
     if (currentPage === 'usuarios' && UserManagementComponent) {
       return <UserManagementComponent currentUser={currentUser} onLogout={onLogout} />;
     }
-
+    
     if (currentPage === 'fontes' && DataSourceManagerComponent) {
       return <DataSourceManagerComponent />;
     }
-
+    
     if (currentPage === 'relatorios' && RelatoriosComponent) {
       return <RelatoriosComponent />;
     }
+    
     if (currentPage === 'validacao' && ValidacaoComponent) {
-        return <ValidacaoComponent />;  // ← ADICIONADO
+      return <ValidacaoComponent />;
     }
+
+    // ========== PÁGINAS DO MÓDULO RECOMENDADOR ==========
     if (currentPage === 'importacao' && ImportacaoComponent) {
       return <ImportacaoComponent />;
     }
-    if (currentPage === 'processamento' && ProcessamentoComponent) {
-        return <ProcessamentoComponent />;
-    }
-    if (currentPage === 'treinamento' && TreinamentoComponent) {
-        return <TreinamentoComponent />;
-    }
-
-    // Páginas em desenvolvimento - mostram placeholder
-    const pageInfo = {
-     
-      
-    };
-
-    const info = pageInfo[currentPage];
-    if (!info) return null;
     
-    const IconComponent = info.icon;
+    if (currentPage === 'processamento' && ProcessamentoComponent) {
+      return <ProcessamentoComponent />;
+    }
+    
+    if (currentPage === 'treinamento' && TreinamentoComponent) {
+      return <TreinamentoComponent />;
+    }
 
+    // ========== PÁGINAS DO APP DO VENDEDOR ==========
+    if (currentPage === 'vendedor-home') {
+      return <VendedorDashboard currentUser={currentUser} />;
+    }
+
+    if (currentPage === 'vendedor-consulta') {
+      return <VendedorConsulta />;
+    }
+
+    if (currentPage === 'vendedor-feedback') {
+      return <VendedorFeedback />;
+    }
+
+    if (currentPage === 'vendedor-email') {
+      return <VendedorEmail />;
+    }
+
+    // Página padrão
     return (
-      <div className="p-4 md:p-8">
-        <div className="mb-6 md:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{info.title}</h1>
-            <span className="text-xs md:text-sm font-medium px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 w-fit">
-              🚧 Em desenvolvimento
-            </span>
-          </div>
-          <p className="text-sm md:text-base text-gray-600">{info.description}</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 md:p-8">
-          <div className="text-center border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-12">
-            <IconComponent className="w-16 md:w-20 h-16 md:h-20 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl md:text-2xl font-semibold text-gray-700 mb-4">
-              Módulo em Desenvolvimento
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 mb-6">{info.description}</p>
-            
-            <div className="max-w-md mx-auto bg-gray-50 p-4 md:p-6 rounded-lg text-left">
-              <p className="text-sm font-semibold text-gray-700 mb-4">
-                📋 Funcionalidades Planejadas:
-              </p>
-              <ul className="space-y-2">
-                {info.features.map((feature, idx) => (
-                  <li key={idx} className="text-xs md:text-sm text-gray-600 flex items-start gap-2">
-                    <span className="text-blue-600 font-bold">•</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+      <div className="p-8">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+          <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Selecione uma opção do menu
+          </h2>
+          <p className="text-gray-600">
+            Navegue pelo menu lateral para acessar as funcionalidades.
+          </p>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-100">
       {/* Mobile Header */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="w-7 h-7 text-blue-600" />
-              <div>
-                <h2 className="font-bold text-base">IARecomend</h2>
-                <p className="text-xs text-gray-500">SHOPINFO</p>
-              </div>
-            </div>
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6 text-gray-700" />
-              ) : (
-                <Menu className="w-6 h-6 text-gray-700" />
-              )}
-            </button>
+        <div className="fixed top-0 left-0 right-0 bg-gray-900 text-white h-16 flex items-center justify-between px-4 z-50">
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-blue-400" />
+            <span className="font-bold text-lg">IARECOMEND</span>
           </div>
+          <button onClick={toggleMobileMenu} className="text-white">
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-      )}
-
-      {/* Overlay para mobile */}
-      {isMobile && mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={toggleMobileMenu}
-        />
       )}
 
       {/* Sidebar */}
       <div
         className={`
-          ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
+          ${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}
           ${isMobile && !mobileMenuOpen ? '-translate-x-full' : 'translate-x-0'}
-          ${!isMobile && sidebarOpen ? 'w-72' : !isMobile ? 'w-20' : 'w-72'}
-          bg-gray-900 text-white transition-all duration-300 flex flex-col
-          ${isMobile ? 'shadow-2xl' : ''}
+          ${sidebarOpen ? 'w-72' : 'w-20'}
+          bg-gray-900 text-white transition-all duration-300 ease-in-out
+          flex flex-col
         `}
       >
-        {/* Header Desktop */}
+        {/* Logo */}
         {!isMobile && (
-          <div className="p-4 border-b border-gray-800">
-            <div className="flex items-center justify-between">
-              {sidebarOpen ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-8 h-8 text-blue-400" />
-                    <div>
-                      <h2 className="font-bold text-lg">IARecomend</h2>
-                      <p className="text-xs text-gray-400">SHOPINFO</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-white">
-                    <X className="w-5 h-5" />
-                  </button>
-                </>
-              ) : (
-                <button onClick={() => setSidebarOpen(true)} className="mx-auto">
-                  <Menu className="w-6 h-6 text-gray-400 hover:text-white" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Header Mobile */}
-        {isMobile && (
-          <div className="p-4 border-b border-gray-800">
-            <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-400" />
-              <div>
-                <h2 className="font-bold text-lg">IARecomend</h2>
-                <p className="text-xs text-gray-400">SHOPINFO</p>
+          <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
+            {sidebarOpen && (
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-blue-400" />
+                <span className="font-bold text-lg">IARECOMEND</span>
               </div>
-            </div>
+            )}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-gray-400 hover:text-white"
+            >
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4">
-          {menuSections.map((section) => (
-            <div key={section.id} className="mb-4">
-              {(sidebarOpen || isMobile) && (
+        <div className="flex-1 overflow-y-auto py-4 px-3">
+          {filteredMenuSections.map((section) => {
+            const SectionIcon = section.icon;
+            const isExpanded = expandedSections[section.id];
+
+            return (
+              <div key={section.id} className="mb-4">
+                {/* Section Header */}
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className="w-full px-4 py-2 flex items-center justify-between text-gray-400 hover:text-white transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors mb-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <section.icon className="w-4 h-4" />
-                    <span className="text-sm font-semibold">{section.title}</span>
+                  <div className="flex items-center gap-3">
+                    <SectionIcon className="w-5 h-5" />
+                    {sidebarOpen && (
+                      <span className="text-sm font-semibold">{section.title}</span>
+                    )}
                   </div>
-                  {expandedSections[section.id] ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
+                  {sidebarOpen &&
+                    (isExpanded ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    ))}
                 </button>
-              )}
 
-              {((sidebarOpen || isMobile) ? expandedSections[section.id] : true) && (
-                <div className="mt-1">
-                  {section.items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleMenuItemClick(item.id)}
-                      className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${
-                        currentPage === item.id
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-800'
-                      }`}
-                      title={!sidebarOpen && !isMobile ? item.label : ''}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {(sidebarOpen || isMobile) && (
-                        <div className="flex-1 text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{item.label}</span>
-                            {item.badge && (
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                item.badgeColor === 'green'
-                                  ? 'bg-green-500 text-white'
-                                  : 'bg-gray-700 text-gray-300'
-                              }`}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </div>
-                          {item.description && (
-                            <p className="text-xs text-gray-400 mt-0.5">{item.description}</p>
+                {/* Menu Items */}
+                {isExpanded && (
+                  <div className="space-y-1 ml-2">
+                    {section.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      const isActive = currentPage === item.id;
+
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleMenuItemClick(item.id)}
+                          className={`
+                            w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+                            ${isActive
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                            }
+                          `}
+                        >
+                          <ItemIcon className="w-4 h-4 flex-shrink-0" />
+                          {sidebarOpen && (
+                            <div className="flex-1 text-left">
+                              <div className="text-sm font-medium">{item.label}</div>
+                              {item.description && (
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
                           )}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                          {sidebarOpen && item.badge && (
+                            <span
+                              className={`
+                                px-2 py-0.5 text-xs font-medium rounded
+                                ${item.badgeColor === 'green'
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-blue-500 text-white'
+                                }
+                              `}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* User Section */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-gray-800">
-          {(sidebarOpen || isMobile) ? (
+          {sidebarOpen ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                   <Users className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{currentUser?.name || 'Administrador'}</p>
-                  <p className="text-xs text-gray-400 truncate">{currentUser?.role || 'Administrador'}</p>
+                  <p className="text-sm font-medium truncate">
+                    {currentUser?.name || 'Usuário'}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {currentUser?.role || 'Sem perfil'}
+                  </p>
                 </div>
               </div>
               <button

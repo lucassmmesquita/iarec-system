@@ -62,9 +62,7 @@ const DataSourceManager = () => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
+  const handleSubmit = () => {
     if (editingId) {
       setDataSources(dataSources.map(ds => 
         ds.id === editingId 
@@ -116,7 +114,7 @@ const DataSourceManager = () => {
   };
 
   const handleDelete = (id) => {
-    if (confirm('Deseja realmente excluir esta fonte de dados?')) {
+    if (window.confirm('Deseja realmente excluir esta fonte de dados?')) {
       setDataSources(dataSources.filter(ds => ds.id !== id));
     }
   };
@@ -133,9 +131,8 @@ const DataSourceManager = () => {
   const requiresUrl = formData.type === 'api';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+    <div className="h-screen bg-gray-50 overflow-y-auto">
+      <div className="p-8">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -155,13 +152,12 @@ const DataSourceManager = () => {
           </div>
         </div>
 
-        {/* Form */}
         {showForm && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">
               {editingId ? 'Editar Fonte de Dados' : 'Nova Fonte de Dados'}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -169,7 +165,6 @@ const DataSourceManager = () => {
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -182,7 +177,6 @@ const DataSourceManager = () => {
                     Tipo de Conexão *
                   </label>
                   <select
-                    required
                     value={formData.type}
                     onChange={(e) => handleTypeChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -203,7 +197,6 @@ const DataSourceManager = () => {
                       </label>
                       <input
                         type="text"
-                        required
                         value={formData.host}
                         onChange={(e) => setFormData({...formData, host: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -233,7 +226,6 @@ const DataSourceManager = () => {
                       </label>
                       <input
                         type="text"
-                        required
                         value={formData.database}
                         onChange={(e) => setFormData({...formData, database: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -249,7 +241,6 @@ const DataSourceManager = () => {
                       </label>
                       <input
                         type="text"
-                        required={!requiresUrl}
                         value={formData.username}
                         onChange={(e) => setFormData({...formData, username: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -264,14 +255,12 @@ const DataSourceManager = () => {
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
-                          required={!requiresUrl}
                           value={formData.password}
                           onChange={(e) => setFormData({...formData, password: e.target.value})}
                           className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="••••••••"
                         />
                         <button
-                          type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                         >
@@ -288,15 +277,12 @@ const DataSourceManager = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Upload de Arquivo
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
-                    <input type="file" accept={formData.type === 'csv' ? '.csv' : '.xlsx,.xls'} className="hidden" id="fileUpload" />
-                    <label htmlFor="fileUpload" className="cursor-pointer">
-                      <Database className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Clique para fazer upload ou arraste o arquivo</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formData.type === 'csv' ? 'Arquivos CSV' : 'Arquivos Excel (XLS, XLSX)'}
-                      </p>
-                    </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition cursor-pointer">
+                    <Database className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">Clique para fazer upload ou arraste o arquivo</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.type === 'csv' ? 'Arquivos CSV' : 'Arquivos Excel (XLS, XLSX)'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -316,24 +302,22 @@ const DataSourceManager = () => {
 
               <div className="flex gap-3 pt-4">
                 <button
-                  type="submit"
+                  onClick={handleSubmit}
                   className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
                 >
                   {editingId ? 'Atualizar' : 'Cadastrar'} Fonte
                 </button>
                 <button
-                  type="button"
                   onClick={resetForm}
                   className="px-6 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition font-medium"
                 >
                   Cancelar
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
-        {/* Lista de Fontes */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="p-4 bg-gray-50 border-b">
             <h3 className="font-semibold text-gray-900">Fontes Cadastradas ({dataSources.length})</h3>
@@ -401,7 +385,6 @@ const DataSourceManager = () => {
           </div>
         </div>
 
-        {/* Informações Técnicas */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-900 mb-2">ℹ️ Informações Técnicas</h3>
           <ul className="text-sm text-blue-800 space-y-1">
