@@ -1,5 +1,199 @@
+# IARECOMEND - .gitignore
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# ===== Python =====
+# Ambientes virtuais
+venv/
+env/
+ENV/
+.venv
+*.virtualenv
+
+# Arquivos Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribuição / Packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Testes
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ===== Node.js / React =====
+# Dependências
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build
+dist/
+dist-ssr/
+build/
+.next/
+out/
+
+# Cache
+.cache/
+.vite/
+.eslintcache
+
+# ===== Variáveis de Ambiente =====
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# ===== Banco de Dados =====
+# SQLite (se usar local)
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL
+*.dump
+*.sql.gz
+
+# Logs do banco
+postgresql.log
+
+# ===== IDEs / Editores =====
+# VSCode
+.vscode/
+.history/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ===== Sistema Operacional =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Temporários =====
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ===== Uploads / Arquivos de Usuário =====
+uploads/
+media/
+static/user_uploads/
+
+# ===== Backups =====
+*.bak
+*.backup
+*.old
+
+# ===== Certificados / Keys =====
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ===== Docker =====
+.dockerignore
+docker-compose.override.yml
+
+# ===== Jupyter Notebook =====
+.ipynb_checkpoints
+*.ipynb
+
+# ===== Alembic (Migrations) =====
+# Manter estrutura, ignorar dados sensíveis
+# alembic/versions/*.py  # Descomentar se quiser ignorar migrations
+
+# ===== Testes e Coverage =====
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+test-results/
+junit.xml
+
+# ===== Documentação Gerada =====
+docs/_build/
+site/
+
+# ===== Outros =====
+.sass-cache/
+*.pid
+*.seed
+*.pid.lock
+.terraform/
+*.tfstate
+*.tfstate.backup

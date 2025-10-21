@@ -2,3 +2,20 @@ Flask==3.0.0
 Flask-CORS==4.0.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
+# FastAPI e servidor
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Banco de dados
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+
+# Validação e serialização
+pydantic==2.5.0
+pydantic[email]==2.5.0
+
+# Utilitários
+python-dotenv==1.0.0
+gunicorn==21.2.0
