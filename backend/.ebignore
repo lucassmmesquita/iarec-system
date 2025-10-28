@@ -2,8 +2,13 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 .env
+.env.local
 *.log
-.git/
-test_*.py
 .DS_Store
+.git/
+.gitignore
+README.md
+test_*.py
+*.md

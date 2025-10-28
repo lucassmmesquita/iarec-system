@@ -59,6 +59,7 @@ app.include_router(usuarios_router)  # Endpoints de usuários
 # ENDPOINTS BÁSICOS (só health check aqui!)
 # ============================================
 
+
 @app.get("/")
 def root():
     """Endpoint raiz com informações da API"""

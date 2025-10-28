@@ -1,0 +1,27 @@
+IARECOMEND Backend - Deploy Info
+=================================
+
+Data: Tue Oct 28 09:19:56 -03 2025
+Ambiente: iarecomend-prod-env
+Aplicação: iarecomend-backend
+Plataforma: Python 3.11 on Amazon Linux 2023
+
+URLs:
+  API:    http://iarecomend-prod-env.eba-5umweadu.us-east-1.elasticbeanstalk.com
+  Docs:   http://iarecomend-prod-env.eba-5umweadu.us-east-1.elasticbeanstalk.com/docs
+  Health: http://iarecomend-prod-env.eba-5umweadu.us-east-1.elasticbeanstalk.com/health
+
+Health Check:
+  Path: /health (configurado em 01_app.config)
+  Interval: 15s
+  Timeout: 5s
+
+Comandos:
+  Ver logs:   cd /Users/lucasmesquita/developer/iarec-system/backend && eb logs
+  Ver status: cd /Users/lucasmesquita/developer/iarec-system/backend && eb status
+  Redeploy:   cd /Users/lucasmesquita/developer/iarec-system/backend && ./deploy-aws-eb.sh
+
+Arquivos:
+  - Procfile (uvicorn)
+  - .ebextensions/01_app.config (única configuração)
+  - .ebignore
