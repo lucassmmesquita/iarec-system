@@ -59,7 +59,6 @@ deploy_backend() {
     
     print_info "Verificando arquivos obrigatórios..."
     
-    # Verificar arquivo principal
     if [ ! -f "app.py" ]; then
         print_error "app.py não encontrado!"
         exit 1
@@ -70,62 +69,29 @@ deploy_backend() {
         exit 1
     fi
     
+    if [ ! -f "config.py" ]; then
+        print_error "config.py não encontrado!"
+        exit 1
+    fi
+    
     print_success "Arquivos OK"
     
-    # Limpar arquivos antigos
-    print_info "Limpando arquivos antigos..."
-    rm -rf .ebextensions
-    rm -f deploy-package.zip
-    rm -rf venv/  # CRÍTICO: Remover venv local
-    rm -rf __pycache__/
-    find . -name "*.pyc" -delete
-    
-    print_success "Limpeza concluída"
-    
-    # Criar Procfile CORRETO para FastAPI/Gunicorn
-    print_info "Criando Procfile..."
+    # Criar/atualizar Procfile para FastAPI com Uvicorn
+    print_info "Criando Procfile para FastAPI..."
     cat > Procfile << 'EOF'
-web: gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 120 application:application
+web: uvicorn app:app --host 0.0.0.0 --port 8000
 EOF
     
-    print_success "Procfile criado"
-    
-    # Validar requirements.txt
-    print_info "Validando requirements.txt..."
-    
-    # Remover linhas problemáticas
-    grep -v '^```' requirements.txt > requirements.tmp || true
-    grep -v '^#' requirements.tmp > requirements.clean || true
-    grep -v '^$' requirements.clean > requirements.txt || true
-    rm -f requirements.tmp requirements.clean
-    
-    print_success "requirements.txt validado"
-    
-    echo ""
-    print_info "Dependências que serão instaladas:"
-    cat requirements.txt
-    echo ""
-    
-    # Criar .ebextensions SEM postgresql-devel (causa erro)
+    # Criar/atualizar .ebextensions
     print_info "Configurando Elastic Beanstalk..."
     mkdir -p .ebextensions
     
-    # 01_packages.config - SEM postgresql-devel
-    cat > .ebextensions/01_packages.config << 'EOF'
-packages:
-  yum:
-    gcc: []
-    python3-devel: []
-EOF
-    
-    # 02_python.config - Configuração Python
-    cat > .ebextensions/02_python.config << 'EOF'
+    cat > .ebextensions/python.config << 'EOF'
 option_settings:
   aws:elasticbeanstalk:container:python:
-    WSGIPath: application:application
+    WSGIPath: app:app
   aws:elasticbeanstalk:application:environment:
-    PYTHONPATH: "/var/app/current"
-    ENVIRONMENT: "production"
+    ENVIRONMENT: production
     DEBUG: "False"
     RDS_DB_HOST: "iarecomend-db2.can8uiyocmxb.us-east-1.rds.amazonaws.com"
     RDS_DB_PORT: "5432"
@@ -137,53 +103,9 @@ option_settings:
     /static: static
 EOF
     
-    print_success "Configuração criada (SEM postgresql-devel)"
-    
-    # Criar pacote de deploy
-    print_info "Criando pacote de deploy..."
-    
-    # Lista de arquivos para incluir (EXCLUI venv/)
-    zip -r deploy-package.zip \
-        app.py \
-        requirements.txt \
-        Procfile \
-        .ebextensions/ \
-        -x "*.pyc" \
-        -x "__pycache__/*" \
-        -x "venv/*" \
-        -x ".env" \
-        -x "*.log" \
-        -x ".git/*" \
-        -x "tests/*"
-    
-    if [ $? -eq 0 ]; then
-        print_success "Pacote criado: deploy-package.zip"
-        
-        # Mostra tamanho do pacote
-        PACKAGE_SIZE=$(du -h deploy-package.zip | cut -f1)
-        print_info "Tamanho do pacote: ${PACKAGE_SIZE}"
-        
-        # Mostra conteúdo do zip
-        echo ""
-        print_info "Conteúdo do pacote:"
-        unzip -l deploy-package.zip
-        echo ""
-    else
-        print_error "Erro ao criar pacote!"
-        exit 1
-    fi
-    
-    # Verificar se EB está configurado
-    if [ ! -d ".elasticbeanstalk" ]; then
-        print_warning "Ambiente EB não configurado!"
-        print_info "Execute primeiro: eb init"
-        print_info "Ou faça upload manual de deploy-package.zip no console AWS"
-        exit 1
-    fi
+    print_success "Configuração criada"
     
     print_info "Fazendo deploy no Elastic Beanstalk..."
-    print_warning "Isso pode levar 2-5 minutos..."
-    
     eb deploy
     
     if [ $? -eq 0 ]; then
@@ -191,38 +113,33 @@ EOF
         print_info "URL: $BACKEND_URL"
     else
         print_error "Falha no deploy do backend"
-        print_info "Veja os logs com: eb logs"
         exit 1
     fi
     
-    print_info "Aguardando aplicação inicializar (20s)..."
-    sleep 20
+    print_info "Testando API (aguardando 10s)..."
+    sleep 10
     
     # Testar health check
-    print_info "Testando API..."
-    
-    if curl -s -f "$BACKEND_URL/health" > /dev/null 2>&1; then
+    if curl -s "$BACKEND_URL/health" | grep -q "healthy"; then
         print_success "API está respondendo!"
-        
-        # Testar endpoint de documentação
-        print_info "Documentação disponível em: $BACKEND_URL/docs"
         
         # Testar endpoint de usuários
         print_info "Testando endpoint de usuários..."
-        if curl -s -f "$BACKEND_URL/api/usuarios" > /dev/null 2>&1; then
+        if curl -s "$BACKEND_URL/api/usuarios" > /dev/null 2>&1; then
             print_success "Endpoint /api/usuarios OK!"
         else
             print_warning "Endpoint /api/usuarios pode estar carregando..."
         fi
         
+        # Testar documentação
+        print_info "Documentação disponível em: $BACKEND_URL/docs"
+        
     else
-        print_warning "API pode estar demorando para iniciar."
+        print_warning "API pode estar demorando para iniciar. Verifique com: eb logs"
         print_info "Aguarde 1-2 minutos e teste manualmente:"
         print_info "  Health: $BACKEND_URL/health"
         print_info "  Docs:   $BACKEND_URL/docs"
         print_info "  API:    $BACKEND_URL/api/usuarios"
-        print_info ""
-        print_info "Ver logs: eb logs"
     fi
 }
 
@@ -419,14 +336,14 @@ show_status() {
     echo -e "${BLUE}Testando conectividade:${NC}"
     
     # Testar backend
-    if curl -s -f "$BACKEND_URL/health" > /dev/null 2>&1; then
+    if curl -s "$BACKEND_URL/health" > /dev/null 2>&1; then
         print_success "Backend está online"
     else
         print_error "Backend não está respondendo"
     fi
     
     # Testar frontend
-    if curl -s -f "http://${S3_BUCKET}.s3-website-us-east-1.amazonaws.com" > /dev/null 2>&1; then
+    if curl -s "http://${S3_BUCKET}.s3-website-us-east-1.amazonaws.com" > /dev/null 2>&1; then
         print_success "Frontend está online"
     else
         print_error "Frontend não está respondendo"
@@ -479,11 +396,6 @@ show_menu() {
     echo "  ./deploy.sh backend"
     echo "  ./deploy.sh frontend"
     echo "  ./deploy.sh status"
-    echo ""
-    echo "IMPORTANTE:"
-    echo "  - O script REMOVE venv/ antes do deploy (AWS EB cria novo)"
-    echo "  - NÃO inclui postgresql-devel (causa erro no AL2023)"
-    echo "  - requirements.txt é validado automaticamente"
     echo ""
 }
 

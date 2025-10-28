@@ -124,7 +124,7 @@ const VendedorDashboard = ({ currentUser }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Olá, {currentUser?.name || 'Vendedor'}! 👋
+          Olá, Maria !
         </h1>
         <p className="text-gray-600">
           Acompanhe seu desempenho e indicadores de vendas
