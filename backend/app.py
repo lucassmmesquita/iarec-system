@@ -13,6 +13,8 @@ from database import init_db, engine
 # IMPORTANTE: Importar as rotas dos módulos
 from routes.usuarios import router as usuarios_router
 
+from routes.recomendacoes import router as recomendacoes_router
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -48,6 +50,8 @@ app.add_middleware(
 # ============================================
 # Cada módulo tem seu próprio router em routes/
 app.include_router(usuarios_router)  # Endpoints de usuários
+
+app.include_router(recomendacoes_router)  # Endpoints de recomendacoes
 
 # Futuros routers (quando criar os arquivos):
 # from routes.fontes import router as fontes_router
