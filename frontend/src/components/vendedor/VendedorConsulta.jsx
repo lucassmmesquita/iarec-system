@@ -2,178 +2,181 @@ import React, { useState } from 'react';
 import {
   Search,
   User,
-  ShoppingBag,
-  Star,
+  Mail,
+  Phone,
+  MapPin,
+  Award,
+  ShoppingCart,
   Clock,
-  DollarSign,
-  Package,
+  TrendingUp,
+  Eye,
+  Plus,
+  Printer,
+  MessageSquare,
+  Star,
   Zap,
+  Target,
   AlertCircle,
-  CheckCircle,
-  Loader,
-  ArrowRight,
-  Info,
-  Download,
-  X
+  CheckCircle
 } from 'lucide-react';
 
 const VendedorConsulta = () => {
-  const [busca, setBusca] = useState('');
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [recomendacoes, setRecomendacoes] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [busca, setBusca] = useState('');
   const [modalCliente, setModalCliente] = useState(false);
   const [orcamento, setOrcamento] = useState([]);
   const [showOrcamento, setShowOrcamento] = useState(false);
-  const [feedbackPreparado, setFeedbackPreparado] = useState(null);
 
-  // Base de clientes mockada
+  // Indicadores do Termo de Encerramento
+  const indicadoresIA = {
+    precisao: 82,        // Meta: ≥80% ✓
+    tempoResposta: 1.2,  // Meta: ≤2s ✓
+    taxaAceitacao: 65,   // Meta: ≥60% ✓
+    cacheHitRate: 68     // Cache Redis
+  };
+
+  // Clientes mockados
   const clientesMock = [
     {
       id: 1,
-      nome: 'João Silva',
+      nome: 'João Silva Santos',
       email: 'joao.silva@email.com',
       telefone: '(85) 98765-4321',
       cpf: '123.456.789-00',
-      ultimaCompra: '15/09/2025',
-      totalCompras: 15,
-      ticketMedio: 450.00,
-      categoriaPreferida: 'Informática',
-      fidelidade: 'Ouro'
+      endereco: 'Fortaleza, CE',
+      fidelidade: 'Gold',
+      comprasAnteriores: 15,
+      ticketMedio: 487.50,
+      ultimaCompra: '10/12/2023',
+      categoriasFavoritas: ['Notebooks', 'Periféricos']
     },
     {
       id: 2,
-      nome: 'Maria Santos',
-      email: 'maria.santos@email.com',
+      nome: 'Maria Oliveira Costa',
+      email: 'maria.oliveira@email.com',
       telefone: '(85) 99876-5432',
-      cpf: '234.567.890-11',
-      ultimaCompra: '02/10/2025',
-      totalCompras: 8,
-      ticketMedio: 380.00,
-      categoriaPreferida: 'Periféricos',
-      fidelidade: 'Prata'
+      cpf: '987.654.321-00',
+      endereco: 'Fortaleza, CE',
+      fidelidade: 'Platinum',
+      comprasAnteriores: 28,
+      ticketMedio: 625.80,
+      ultimaCompra: '05/12/2023',
+      categoriasFavoritas: ['Monitores', 'Áudio']
     },
     {
       id: 3,
-      nome: 'Pedro Costa',
-      email: 'pedro.costa@email.com',
+      nome: 'Carlos Eduardo Mendes',
+      email: 'carlos.mendes@email.com',
       telefone: '(85) 97654-3210',
-      cpf: '345.678.901-22',
-      ultimaCompra: '18/10/2025',
-      totalCompras: 23,
-      ticketMedio: 620.00,
-      categoriaPreferida: 'Hardware',
-      fidelidade: 'Platina'
-    },
-    {
-      id: 4,
-      nome: 'Ana Oliveira',
-      email: 'ana.oliveira@email.com',
-      telefone: '(85) 96543-2109',
-      cpf: '456.789.012-33',
-      ultimaCompra: '05/10/2025',
-      totalCompras: 5,
-      ticketMedio: 290.00,
-      categoriaPreferida: 'Acessórios',
-      fidelidade: 'Bronze'
+      cpf: '456.789.123-00',
+      endereco: 'Fortaleza, CE',
+      fidelidade: 'Silver',
+      comprasAnteriores: 8,
+      ticketMedio: 312.40,
+      ultimaCompra: '18/11/2023',
+      categoriasFavoritas: ['Acessórios', 'Armazenamento']
     }
   ];
 
-  // Base ampliada de produtos
-  const todosProdutos = [
-    { nome: 'Notebook Dell Inspiron 15', preco: 3200.00, categoria: 'Notebooks', imagem: '💻' },
-    { nome: 'Notebook Lenovo IdeaPad', preco: 2800.00, categoria: 'Notebooks', imagem: '💻' },
-    { nome: 'Notebook HP Pavilion', preco: 3500.00, categoria: 'Notebooks', imagem: '💻' },
-    { nome: 'Notebook Acer Aspire', preco: 2600.00, categoria: 'Notebooks', imagem: '💻' },
-    { nome: 'MacBook Air M2', preco: 8500.00, categoria: 'Notebooks', imagem: '💻' },
-    { nome: 'Mouse Logitech MX Master 3', preco: 450.00, categoria: 'Periféricos', imagem: '🖱️' },
-    { nome: 'Mouse Razer DeathAdder', preco: 280.00, categoria: 'Periféricos', imagem: '🖱️' },
-    { nome: 'Teclado Mecânico Redragon K552', preco: 280.00, categoria: 'Periféricos', imagem: '⌨️' },
-    { nome: 'Teclado Logitech MX Keys', preco: 620.00, categoria: 'Periféricos', imagem: '⌨️' },
-    { nome: 'Teclado Corsair K95', preco: 890.00, categoria: 'Periféricos', imagem: '⌨️' },
-    { nome: 'SSD Kingston 1TB NVMe', preco: 380.00, categoria: 'Hardware', imagem: '💾' },
-    { nome: 'SSD Samsung 970 EVO 500GB', preco: 420.00, categoria: 'Hardware', imagem: '💾' },
-    { nome: 'HD Seagate 2TB', preco: 320.00, categoria: 'Hardware', imagem: '💾' },
-    { nome: 'Memória RAM 16GB DDR4', preco: 350.00, categoria: 'Hardware', imagem: '🧩' },
-    { nome: 'Memória RAM 32GB DDR4', preco: 680.00, categoria: 'Hardware', imagem: '🧩' },
-    { nome: 'Placa de Vídeo RTX 4060', preco: 2400.00, categoria: 'Hardware', imagem: '🎮' },
-    { nome: 'Placa de Vídeo GTX 1660', preco: 1800.00, categoria: 'Hardware', imagem: '🎮' },
-    { nome: 'Processador AMD Ryzen 7 5800X', preco: 1600.00, categoria: 'Hardware', imagem: '⚙️' },
-    { nome: 'Processador Intel i7 12700K', preco: 2200.00, categoria: 'Hardware', imagem: '⚙️' },
-    { nome: 'Monitor LG 27" 4K', preco: 1800.00, categoria: 'Monitores', imagem: '🖥️' },
-    { nome: 'Monitor Samsung 24" Full HD', preco: 890.00, categoria: 'Monitores', imagem: '🖥️' },
-    { nome: 'Monitor Dell UltraSharp 32"', preco: 2800.00, categoria: 'Monitores', imagem: '🖥️' },
-    { nome: 'Headset HyperX Cloud II', preco: 320.00, categoria: 'Áudio', imagem: '🎧' },
-    { nome: 'Headset Logitech G Pro X', preco: 680.00, categoria: 'Áudio', imagem: '🎧' },
-    { nome: 'Caixa de Som JBL Flip 5', preco: 580.00, categoria: 'Áudio', imagem: '🔊' },
-    { nome: 'Webcam Logitech C920', preco: 420.00, categoria: 'Acessórios', imagem: '📷' },
-    { nome: 'Webcam Razer Kiyo', preco: 680.00, categoria: 'Acessórios', imagem: '📷' },
-    { nome: 'Mouse Pad Gamer RGB', preco: 85.00, categoria: 'Acessórios', imagem: '🎨' },
-    { nome: 'Hub USB-C 7 Portas', preco: 120.00, categoria: 'Acessórios', imagem: '🔌' },
-    { nome: 'Suporte para Notebook', preco: 95.00, categoria: 'Ergonomia', imagem: '📐' },
-    { nome: 'Cadeira Gamer DXRacer', preco: 1800.00, categoria: 'Ergonomia', imagem: '🪑' },
+  // Produtos mockados para recomendação
+  const produtosMock = [
+    { id: 1, nome: 'Notebook Dell Inspiron 15 i5 11ª Gen 8GB 256GB SSD', preco: 3299.99, categoria: 'Notebooks', estoque: 12, desconto: 0 },
+    { id: 2, nome: 'Monitor LG 27" UltraWide Full HD IPS 75Hz', preco: 1799.99, categoria: 'Monitores', estoque: 8, desconto: 10 },
+    { id: 3, nome: 'Mouse Logitech MX Master 3 Wireless', preco: 449.99, categoria: 'Periféricos', estoque: 25, desconto: 0 },
+    { id: 4, nome: 'Teclado Mecânico Redragon K552 RGB', preco: 279.99, categoria: 'Periféricos', estoque: 18, desconto: 15 },
+    { id: 5, nome: 'Webcam Logitech C920 Full HD 1080p', preco: 419.99, categoria: 'Áudio', estoque: 15, desconto: 0 },
+    { id: 6, nome: 'SSD Kingston NV2 500GB M.2 NVMe', preco: 289.99, categoria: 'Armazenamento', estoque: 30, desconto: 0 },
+    { id: 7, nome: 'Headset HyperX Cloud II Gaming 7.1', preco: 549.99, categoria: 'Áudio', estoque: 10, desconto: 20 },
+    { id: 8, nome: 'Hub USB-C 7 em 1 com HDMI e Ethernet', preco: 159.99, categoria: 'Acessórios', estoque: 22, desconto: 0 },
+    { id: 9, nome: 'Suporte Ergonômico para Monitor Articulado', preco: 189.99, categoria: 'Ergonomia', estoque: 14, desconto: 0 },
+    { id: 10, nome: 'Mousepad Gamer Grande 90x40cm', preco: 79.99, categoria: 'Acessórios', estoque: 35, desconto: 0 },
+    { id: 11, nome: 'Notebook Lenovo IdeaPad 3 i7 16GB 512GB', preco: 4199.99, categoria: 'Notebooks', estoque: 6, desconto: 0 },
+    { id: 12, nome: 'Monitor Samsung 24" Curvo Full HD 75Hz', preco: 899.99, categoria: 'Monitores', estoque: 11, desconto: 0 }
   ];
 
+  // Função para gerar recomendações baseadas no perfil do cliente (simulando IA com 82% de precisão)
   const gerarRecomendacoes = (clienteId) => {
-    const numProdutos = Math.floor(Math.random() * 4) + 5;
-    const produtosEmbaralhados = [...todosProdutos].sort(() => Math.random() - 0.5);
-    const produtosSelecionados = produtosEmbaralhados.slice(0, numProdutos);
+    const cliente = clientesMock.find(c => c.id === clienteId);
     
-    return produtosSelecionados.map((produto, index) => ({
-      id: Date.now() + index,
-      nome: produto.nome,
-      preco: produto.preco,
-      desconto: Math.floor(Math.random() * 3) * 5,
-      categoria: produto.categoria,
-      imagem: produto.imagem,
-      confianca: Math.floor(Math.random() * 25) + 70,
-      ranking: index + 1,
-      motivo: gerarMotivo(produto.categoria, clienteId),
-      estoque: Math.floor(Math.random() * 50) + 10
-    }));
+    // Simula o algoritmo de IA considerando categorias favoritas e histórico
+    let produtosFiltrados = [...produtosMock];
+    
+    // Prioriza categorias favoritas do cliente
+    if (cliente.categoriasFavoritas && cliente.categoriasFavoritas.length > 0) {
+      produtosFiltrados = produtosFiltrados.sort((a, b) => {
+        const aFavorito = cliente.categoriasFavoritas.includes(a.categoria);
+        const bFavorito = cliente.categoriasFavoritas.includes(b.categoria);
+        if (aFavorito && !bFavorito) return -1;
+        if (!aFavorito && bFavorito) return 1;
+        return 0;
+      });
+    }
+
+    // Adiciona variação aleatória para simular diferentes recomendações
+    produtosFiltrados = produtosFiltrados
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 6 + Math.floor(Math.random() * 3)); // Entre 6 e 8 produtos
+
+    // Calcula confiança baseada na precisão de 82% do modelo
+    const confianciaBase = 82; // Precisão alcançada no projeto
+    
+    return produtosFiltrados.map((produto, index) => {
+      const variacaoConfianca = (Math.random() * 15) - 7.5; // Variação de ±7.5%
+      const confianca = Math.min(95, Math.max(70, confianciaBase + variacaoConfianca));
+      
+      return {
+        ...produto,
+        posicao: index + 1,
+        confianca: confianca.toFixed(1),
+        motivo: gerarMotivo(produto.categoria, cliente),
+        score: (100 - index * 5) + Math.random() * 10
+      };
+    }).sort((a, b) => b.score - a.score);
   };
 
-  const gerarMotivo = (categoria, clienteId) => {
+  const gerarMotivo = (categoria, cliente) => {
     const motivos = {
       'Notebooks': [
-        'Cliente tem histórico de compra de notebooks',
-        'Baseado no perfil de uso profissional',
-        'Tendência de upgrade a cada 2 anos',
-        'Categoria mais comprada pelo cliente'
-      ],
-      'Periféricos': [
-        'Frequentemente comprado junto com computadores',
-        'Cliente demonstrou interesse em ergonomia',
-        'Upgrade recomendado para melhor produtividade',
-        'Complemento ideal para setup atual'
-      ],
-      'Hardware': [
-        'Upgrade popular entre compradores de notebooks',
-        'Performance ideal para perfil do cliente',
-        'Melhoria significativa em velocidade',
-        'Compatível com equipamentos atuais'
+        `Cliente ${cliente.fidelidade} com histórico em notebooks - Alta probabilidade de upgrade`,
+        'Baseado nas últimas 3 compras em tecnologia do cliente',
+        'Tendência de renovação de equipamento a cada 2 anos',
+        'Perfil de uso profissional intensivo identificado'
       ],
       'Monitores': [
-        'Segundo monitor aumenta produtividade em 42%',
-        'Tendência de setup multi-monitor',
-        'Ideal para trabalho híbrido',
-        'Qualidade premium para uso profissional'
+        'Setup multi-monitor aumenta produtividade em 42%',
+        'Clientes com notebook costumam adquirir monitor externo',
+        'Tendência crescente de trabalho híbrido',
+        'Compatível com equipamentos já adquiridos'
+      ],
+      'Periféricos': [
+        'Complemento natural para setup de trabalho/gaming',
+        'Alto índice de satisfação nesta categoria',
+        'Acessório essencial para produtividade',
+        'Frequentemente adquirido junto com computadores'
       ],
       'Áudio': [
-        'Essencial para reuniões online',
-        'Qualidade de som valorizada pelo cliente',
+        'Essencial para reuniões online e entretenimento',
+        'Qualidade de áudio valorizada pelo perfil do cliente',
         'Combo popular com computadores',
-        'Conforto para longas jornadas'
+        'Investimento em conforto sonoro'
       ],
       'Acessórios': [
-        'Complemento essencial para setup',
+        'Complemento de alto valor agregado',
         'Melhora organização e produtividade',
-        'Preço acessível com alto valor agregado',
+        'Preço acessível com alta utilidade',
         'Facilita conexão de múltiplos dispositivos'
+      ],
+      'Armazenamento': [
+        'Upgrade de performance comprovado',
+        'Necessidade identificada no perfil de uso',
+        'Solução para limitação de espaço',
+        'ROI imediato em velocidade'
       ],
       'Ergonomia': [
         'Saúde e conforto são prioridades',
-        'Investimento em bem-estar',
+        'Investimento em bem-estar no trabalho',
         'Reduz fadiga em longas jornadas',
         'Recomendado por especialistas'
       ]
@@ -200,17 +203,22 @@ const VendedorConsulta = () => {
 
     setLoading(true);
     
+    // Simula o tempo de resposta alcançado: 1.2s (Meta: ≤2s)
+    const tempoResposta = 1.2 + (Math.random() * 0.3); // Entre 1.2s e 1.5s
+    
     setTimeout(() => {
       const produtosRecomendados = gerarRecomendacoes(clienteSelecionado.id);
       
       setRecomendacoes({
         produtos: produtosRecomendados,
         timestamp: new Date().toLocaleString('pt-BR'),
-        versaoModelo: 'v2.4.1',
-        tempoProcessamento: `${(Math.random() * 0.5 + 0.2).toFixed(2)}s`
+        versaoModelo: 'CF v3.2',
+        tempoProcessamento: `${tempoResposta.toFixed(2)}s`,
+        precisaoModelo: indicadoresIA.precisao,
+        cacheStatus: Math.random() > 0.32 ? 'HIT' : 'MISS' // 68% cache hit rate
       });
       setLoading(false);
-    }, 1500);
+    }, tempoResposta * 1000);
   };
 
   const handleAdicionarAoOrcamento = (produto) => {
@@ -229,558 +237,415 @@ const VendedorConsulta = () => {
     setOrcamento(prev => prev.filter(p => p.id !== produtoId));
   };
 
-  const handleIrParaFeedback = () => {
-    if (!recomendacoes || !clienteSelecionado) {
-      alert('⚠️ Nenhuma recomendação foi gerada ainda!');
-      return;
-    }
-
-    const dadosFeedback = {
-      cliente: clienteSelecionado,
-      recomendacao: {
-        id: `rec_${Date.now()}`,
-        timestamp: recomendacoes.timestamp,
-        produtos: recomendacoes.produtos.map(p => ({
-          ...p,
-          aceito: null
-        }))
-      }
-    };
-
-    setFeedbackPreparado(dadosFeedback);
-    alert('✅ Dados preparados para feedback! Você seria redirecionado para a tela de Feedback.');
-    console.log('Dados preparados para feedback:', dadosFeedback);
-  };
-
-  const handleImprimirLista = () => {
-    if (!recomendacoes || !clienteSelecionado) {
-      alert('⚠️ Nenhuma recomendação foi gerada ainda!');
-      return;
-    }
-
-    const conteudoImpressao = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Recomendações - ${clienteSelecionado.nome}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-          .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-          .produto { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
-          .produto-header { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-          .preco { font-size: 20px; color: #2563eb; font-weight: bold; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
-          @media print { button { display: none; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>SHOPINFO - Recomendações Personalizadas</h1>
-          <p>Gerado em: ${recomendacoes.timestamp}</p>
-        </div>
-        
-        <div class="info">
-          <h2>Informações do Cliente</h2>
-          <p><strong>Nome:</strong> ${clienteSelecionado.nome}</p>
-          <p><strong>Email:</strong> ${clienteSelecionado.email}</p>
-          <p><strong>Telefone:</strong> ${clienteSelecionado.telefone}</p>
-          <p><strong>Fidelidade:</strong> ${clienteSelecionado.fidelidade}</p>
-        </div>
-
-        <h2>Produtos Recomendados (${recomendacoes.produtos.length})</h2>
-        
-        ${recomendacoes.produtos.map((produto, index) => `
-          <div class="produto">
-            <div class="produto-header">${index + 1}. ${produto.nome}</div>
-            <p><strong>Categoria:</strong> ${produto.categoria}</p>
-            <p><strong>Confiança da IA:</strong> ${produto.confianca}%</p>
-            <p><strong>Motivo:</strong> ${produto.motivo}</p>
-            <p><strong>Estoque:</strong> ${produto.estoque} unidades</p>
-            ${produto.desconto > 0 ? `
-              <p>
-                <span style="text-decoration: line-through;">R$ ${produto.preco.toFixed(2)}</span>
-                <span class="preco"> R$ ${(produto.preco * (1 - produto.desconto / 100)).toFixed(2)}</span>
-                <span style="color: red; font-weight: bold;"> (-${produto.desconto}%)</span>
-              </p>
-            ` : `
-              <p class="preco">R$ ${produto.preco.toFixed(2)}</p>
-            `}
-          </div>
-        `).join('')}
-
-        <div class="footer">
-          <p>© 2025 SHOPINFO - Tecnologia e Inovação | Fortaleza, Ceará - Brasil</p>
-          <p>Modelo IA: ${recomendacoes.versaoModelo} | Tempo de processamento: ${recomendacoes.tempoProcessamento}</p>
-        </div>
-
-        <script>
-          window.onload = function() {
-            window.print();
-            setTimeout(() => window.close(), 100);
-          }
-        </script>
-      </body>
-      </html>
-    `;
-
-    const janelaImpressao = window.open('', '_blank', 'width=800,height=600');
-    janelaImpressao.document.write(conteudoImpressao);
-    janelaImpressao.document.close();
-  };
-
   const calcularTotalOrcamento = () => {
-    return orcamento.reduce((total, produto) => {
-      const precoFinal = produto.preco * (1 - produto.desconto / 100);
-      return total + (precoFinal * produto.quantidade);
+    return orcamento.reduce((total, item) => {
+      const precoComDesconto = item.preco * (1 - item.desconto / 100);
+      return total + (precoComDesconto * item.quantidade);
     }, 0);
-  };
-
-  const getFidelidadeColor = (nivel) => {
-    const colors = {
-      'Platina': 'bg-gray-800 text-white',
-      'Ouro': 'bg-yellow-500 text-white',
-      'Prata': 'bg-gray-400 text-white',
-      'Bronze': 'bg-orange-600 text-white'
-    };
-    return colors[nivel] || 'bg-gray-500 text-white';
-  };
-
-  const getConfiancaColor = (confianca) => {
-    if (confianca >= 90) return 'text-green-600';
-    if (confianca >= 80) return 'text-blue-600';
-    if (confianca >= 70) return 'text-yellow-600';
-    return 'text-orange-600';
   };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Consulta de Recomendações 🔍
+          Consulta de Recomendações 🎯
         </h1>
         <p className="text-gray-600">
-          Busque o cliente e gere recomendações personalizadas com IA
+          Busque um cliente e gere recomendações personalizadas com IA em {indicadoresIA.tempoResposta}s
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar Cliente
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                onFocus={() => setModalCliente(true)}
-                placeholder="Digite nome, e-mail ou CPF..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+      {/* Indicadores IA - Destaque */}
+      <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6">
+        <h3 className="font-bold text-green-900 mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5" />
+          ✨ Indicadores de Desempenho da IA 
+        </h3>
+        <div className="grid md:grid-cols-4 gap-4">
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 text-center border border-green-200">
+            <p className="text-xs text-gray-600 mb-1">Precisão do Modelo</p>
+            <p className="text-3xl font-bold text-green-600">{indicadoresIA.precisao}%</p>
+            <p className="text-xs text-gray-500 mt-1">Meta: ≥80% ✓</p>
           </div>
-          
-          {clienteSelecionado && (
-            <div className="flex items-end">
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 text-center border border-blue-200">
+            <p className="text-xs text-gray-600 mb-1">Tempo de Resposta</p>
+            <p className="text-3xl font-bold text-blue-600">{indicadoresIA.tempoResposta}s</p>
+            <p className="text-xs text-gray-500 mt-1">Meta: ≤2s ✓</p>
+          </div>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 text-center border border-purple-200">
+            <p className="text-xs text-gray-600 mb-1">Taxa de Aceitação</p>
+            <p className="text-3xl font-bold text-purple-600">{indicadoresIA.taxaAceitacao}%</p>
+            <p className="text-xs text-gray-500 mt-1">Meta: ≥60% ✓</p>
+          </div>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 text-center border border-orange-200">
+            <p className="text-xs text-gray-600 mb-1">Cache Hit Rate</p>
+            <p className="text-3xl font-bold text-orange-600">{indicadoresIA.cacheHitRate}%</p>
+            <p className="text-xs text-gray-500 mt-1">Redis Cache</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Busca de Cliente */}
+      <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">1. Selecione o Cliente</h3>
+        
+        {!clienteSelecionado ? (
+          <button
+            onClick={() => setModalCliente(true)}
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            <Search className="w-5 h-5" />
+            Buscar Cliente
+          </button>
+        ) : (
+          <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-600 text-white rounded-lg">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">{clienteSelecionado.nome}</h4>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      {clienteSelecionado.email}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      {clienteSelecionado.telefone}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      clienteSelecionado.fidelidade === 'Platinum' ? 'bg-purple-100 text-purple-700' :
+                      clienteSelecionado.fidelidade === 'Gold' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      <Award className="w-3 h-3 inline mr-1" />
+                      {clienteSelecionado.fidelidade}
+                    </span>
+                    <span className="text-xs text-gray-600">
+                      {clienteSelecionado.comprasAnteriores} compras | 
+                      Ticket médio: R$ {clienteSelecionado.ticketMedio.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
               <button
-                onClick={handleGerarRecomendacoes}
-                disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={() => {
+                  setClienteSelecionado(null);
+                  setRecomendacoes(null);
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
               >
-                {loading ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-5 h-5" />
-                    Gerar Recomendações
-                  </>
-                )}
+                Trocar Cliente
               </button>
             </div>
-          )}
-        </div>
-
-        {modalCliente && busca && (
-          <div className="mt-4 border border-gray-200 rounded-lg bg-gray-50 max-h-80 overflow-y-auto">
-            {clientesFiltrados.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {clientesFiltrados.map((cliente) => (
-                  <div
-                    key={cliente.id}
-                    onClick={() => handleSelecionarCliente(cliente)}
-                    className="p-4 hover:bg-white cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{cliente.nome}</p>
-                          <p className="text-sm text-gray-600">{cliente.email}</p>
-                        </div>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getFidelidadeColor(cliente.fidelidade)}`}>
-                        {cliente.fidelidade}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-gray-500">
-                <User className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>Nenhum cliente encontrado</p>
-              </div>
-            )}
           </div>
         )}
       </div>
 
-      {clienteSelecionado && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Cliente Selecionado</h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getFidelidadeColor(clienteSelecionado.fidelidade)}`}>
-              {clienteSelecionado.fidelidade}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Nome</span>
-              </div>
-              <p className="font-semibold text-gray-900">{clienteSelecionado.nome}</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <ShoppingBag className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Total de Compras</span>
-              </div>
-              <p className="font-semibold text-gray-900">{clienteSelecionado.totalCompras}</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Ticket Médio</span>
-              </div>
-              <p className="font-semibold text-gray-900">
-                R$ {clienteSelecionado.ticketMedio.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Última Compra</span>
-              </div>
-              <p className="font-semibold text-gray-900">{clienteSelecionado.ultimaCompra}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {loading && (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Gerando Recomendações...
-          </h3>
-          <p className="text-gray-600">
-            A IA está processando o histórico do cliente para criar recomendações personalizadas
+      {/* Gerar Recomendações */}
+      {clienteSelecionado && !recomendacoes && !loading && (
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">2. Gerar Recomendações com IA</h3>
+          <button
+            onClick={handleGerarRecomendacoes}
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition font-medium"
+          >
+            <Zap className="w-5 h-5" />
+            Processar com IA (Tempo: ~{indicadoresIA.tempoResposta}s)
+          </button>
+          <p className="text-xs text-center text-gray-500 mt-2">
+            Modelo: Collaborative Filtering v3.2 | Precisão: {indicadoresIA.precisao}%
           </p>
         </div>
       )}
 
-      {recomendacoes && !loading && (
-        <div>
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
-            <div className="flex items-center justify-between">
+      {/* Loading */}
+      {loading && (
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Processando Recomendações com IA...
+          </h3>
+          <p className="text-sm text-gray-600">
+            Analisando histórico do cliente, preferências e tendências de mercado
+          </p>
+          <div className="mt-4 space-y-2 text-xs text-gray-500">
+            <p>⚡ Algoritmo: Collaborative Filtering v3.2</p>
+            <p>🎯 Precisão esperada: {indicadoresIA.precisao}%</p>
+            <p>⏱️ Tempo estimado: ~{indicadoresIA.tempoResposta}s</p>
+          </div>
+        </div>
+      )}
+
+      {/* Recomendações */}
+      {recomendacoes && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  <Zap className="w-6 h-6" />
-                  Recomendações Geradas
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Recomendações Geradas ({recomendacoes.produtos.length} produtos)
                 </h3>
-                <p className="text-blue-100">
-                  {recomendacoes.produtos.length} produtos recomendados • 
-                  Processado em {recomendacoes.tempoProcessamento}
-                </p>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Processado em: <strong>{recomendacoes.tempoProcessamento}</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Target className="w-4 h-4" />
+                    Precisão: <strong>{recomendacoes.precisaoModelo}%</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {recomendacoes.cacheStatus === 'HIT' ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                    )}
+                    Cache: <strong>{recomendacoes.cacheStatus}</strong>
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-blue-100">Modelo IA</p>
-                <p className="text-lg font-semibold">{recomendacoes.versaoModelo}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowOrcamento(!showOrcamento)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Orçamento ({orcamento.length})
+                </button>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recomendacoes.produtos.map((produto, index) => (
-              <div
-                key={produto.id}
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <div className="relative">
-                  <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 flex items-center justify-center">
-                    <span className="text-7xl">{produto.imagem}</span>
-                  </div>
-                  <div className="absolute top-3 left-3">
-                    <span className={`
-                      px-3 py-1 rounded-full text-sm font-bold
-                      ${index === 0 ? 'bg-yellow-500 text-white' :
-                        index === 1 ? 'bg-gray-300 text-gray-700' :
-                        'bg-orange-500 text-white'}
-                    `}>
-                      #{index + 1} Recomendado
-                    </span>
-                  </div>
-                  {produto.desconto > 0 && (
-                    <div className="absolute top-3 right-3">
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                        -{produto.desconto}%
-                      </span>
-                    </div>
-                  )}
-                </div>
+            {/* Lista de Produtos Recomendados */}
+            <div className="space-y-4">
+              {recomendacoes.produtos.map((produto) => (
+                <div
+                  key={produto.id}
+                  className="border-2 border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold text-lg">
+                          {produto.posicao}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 mb-1">{produto.nome}</h4>
+                          <div className="flex items-center gap-3 text-sm">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
+                              {produto.categoria}
+                            </span>
+                            <span className="flex items-center gap-1 text-gray-600">
+                              <Target className="w-4 h-4" />
+                              Confiança: <strong className="text-purple-600">{produto.confianca}%</strong>
+                            </span>
+                            <span className="text-gray-600">
+                              Estoque: <strong>{produto.estoque}</strong>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
 
-                <div className="p-5">
-                  <div className="mb-3">
-                    <h4 className="font-bold text-gray-900 text-lg mb-1">
-                      {produto.nome}
-                    </h4>
-                    <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
-                      {produto.categoria}
-                    </span>
-                  </div>
-
-                  <div className="mb-4">
-                    {produto.desconto > 0 ? (
-                      <div>
-                        <p className="text-sm text-gray-500 line-through">
-                          R$ {produto.preco.toFixed(2)}
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          R$ {(produto.preco * (1 - produto.desconto / 100)).toFixed(2)}
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+                        <p className="text-sm text-purple-900">
+                          <strong>💡 Por que recomendar:</strong> {produto.motivo}
                         </p>
                       </div>
-                    ) : (
-                      <p className="text-2xl font-bold text-gray-900">
-                        R$ {produto.preco.toFixed(2)}
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">Confiança da IA</span>
-                      <span className={`text-sm font-bold ${getConfiancaColor(produto.confianca)}`}>
-                        {produto.confianca}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          produto.confianca >= 90 ? 'bg-green-500' :
-                          produto.confianca >= 80 ? 'bg-blue-500' :
-                          produto.confianca >= 70 ? 'bg-yellow-500' : 'bg-orange-500'
-                        }`}
-                        style={{ width: `${produto.confianca}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-                    <div className="flex items-start gap-2">
-                      <Info className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-purple-800">{produto.motivo}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">
-                        {produto.estoque} em estoque
-                      </span>
-                    </div>
-                    {produto.estoque < 20 && (
-                      <span className="flex items-center gap-1 text-xs text-orange-600 font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        Estoque baixo
-                      </span>
-                    )}
-                  </div>
-
-                  <button 
-                    onClick={() => handleAdicionarAoOrcamento(produto)}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    Adicionar ao Orçamento
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    Recomendações Prontas
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Total estimado: R$ {recomendacoes.produtos.reduce((acc, p) => 
-                      acc + (p.preco * (1 - p.desconto / 100)), 0
-                    ).toFixed(2)} • {orcamento.length} no orçamento
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button 
-                  onClick={handleImprimirLista}
-                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-5 h-5" />
-                  Imprimir Lista
-                </button>
-                {orcamento.length > 0 && (
-                  <button
-                    onClick={() => setShowOrcamento(true)}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    Ver Orçamento ({orcamento.length})
-                  </button>
-                )}
-                <button
-                  onClick={handleIrParaFeedback}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                  <ArrowRight className="w-5 h-5" />
-                  Ir para Feedback
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {showOrcamento && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
-                <div className="p-6 border-b flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Orçamento</h2>
-                  <button
-                    onClick={() => setShowOrcamento(false)}
-                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="p-6 overflow-y-auto max-h-[60vh]">
-                  {orcamento.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">Nenhum produto no orçamento</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {orcamento.map((produto) => (
-                        <div key={produto.id} className="border border-gray-200 rounded-lg p-4 flex items-center gap-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl">
-                            {produto.imagem}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900">{produto.nome}</h3>
-                            <p className="text-sm text-gray-600">{produto.categoria}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              {produto.desconto > 0 ? (
-                                <>
-                                  <span className="text-sm text-gray-500 line-through">
-                                    R$ {produto.preco.toFixed(2)}
-                                  </span>
-                                  <span className="text-lg font-bold text-green-600">
-                                    R$ {(produto.preco * (1 - produto.desconto / 100)).toFixed(2)}
-                                  </span>
-                                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
-                                    -{produto.desconto}%
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-lg font-bold text-gray-900">
-                                  R$ {produto.preco.toFixed(2)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleRemoverDoOrcamento(produto.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-2xl font-bold text-gray-900">
+                            R$ {produto.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          {produto.desconto > 0 && (
+                            <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold mt-1">
+                              {produto.desconto}% OFF
+                            </span>
+                          )}
                         </div>
-                      ))}
+                        <button
+                          onClick={() => handleAdicionarAoOrcamento(produto)}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Adicionar ao Orçamento
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                {orcamento.length > 0 && (
-                  <div className="p-6 border-t bg-gray-50">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-2xl font-bold text-blue-600">
-                        R$ {calcularTotalOrcamento().toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex gap-3">
+            {/* Modal Orçamento */}
+            {showOrcamento && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+                  <div className="p-6 border-b bg-gradient-to-r from-green-600 to-blue-600">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-white">Orçamento ({orcamento.length} itens)</h2>
                       <button
-                        onClick={handleImprimirLista}
-                        className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                        onClick={() => setShowOrcamento(false)}
+                        className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg"
                       >
-                        Imprimir Orçamento
+                        <span className="text-2xl">&times;</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 overflow-y-auto max-h-[60vh]">
+                    {orcamento.length === 0 ? (
+                      <div className="text-center py-12">
+                        <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600">Nenhum produto no orçamento</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {orcamento.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{item.nome}</p>
+                              <p className="text-sm text-gray-600">Qtd: {item.quantidade}</p>
+                            </div>
+                            <div className="text-right mr-4">
+                              <p className="text-lg font-bold text-gray-900">
+                                R$ {(item.preco * (1 - item.desconto / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleRemoverDoOrcamento(item.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            >
+                              <span className="text-xl">&times;</span>
+                            </button>
+                          </div>
+                        ))}
+
+                        <div className="border-t pt-4 mt-4">
+                          <div className="flex items-center justify-between text-xl font-bold">
+                            <span>Total:</span>
+                            <span className="text-green-600">
+                              R$ {calcularTotalOrcamento().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {orcamento.length > 0 && (
+                    <div className="p-6 border-t bg-gray-50 flex gap-3">
+                      <button
+                        onClick={() => {
+                          alert('🖨️ Funcionalidade de impressão em desenvolvimento');
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                      >
+                        <Printer className="w-5 h-5" />
+                        Imprimir
                       </button>
                       <button
                         onClick={() => {
-                          alert('✅ Orçamento enviado para o cliente!');
+                          alert('✅ Orçamento enviado! Redirecionando para feedback...');
                           setShowOrcamento(false);
                         }}
-                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
                       >
                         Enviar Orçamento
                       </button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
+      {/* Modal Busca de Cliente */}
+      {modalCliente && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Buscar Cliente</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, e-mail ou CPF..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {clientesFiltrados.length === 0 ? (
+                <div className="text-center py-12">
+                  <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600">Nenhum cliente encontrado</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {clientesFiltrados.map((cliente) => (
+                    <div
+                      key={cliente.id}
+                      onClick={() => handleSelecionarCliente(cliente)}
+                      className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-gray-900">{cliente.nome}</h4>
+                          <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                            <span>{cliente.email}</span>
+                            <span>•</span>
+                            <span>{cliente.telefone}</span>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          cliente.fidelidade === 'Platinum' ? 'bg-purple-100 text-purple-700' :
+                          cliente.fidelidade === 'Gold' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {cliente.fidelidade}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setModalCliente(false)}
+                className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Informações */}
       {!clienteSelecionado && !loading && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
           <Search className="w-12 h-12 text-blue-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Como funciona?
+            Como funciona o Sistema de Recomendação com IA?
           </h3>
           <div className="max-w-2xl mx-auto space-y-2 text-sm text-blue-800">
             <p>1️⃣ <strong>Busque o cliente</strong> usando nome, e-mail ou CPF</p>
-            <p>2️⃣ <strong>Clique em "Gerar Recomendações"</strong> para processar com IA</p>
-            <p>3️⃣ <strong>Visualize 5-8 produtos</strong> ranqueados por relevância (sempre diferentes!)</p>
+            <p>2️⃣ <strong>Clique em "Processar com IA"</strong> para gerar recomendações em ~{indicadoresIA.tempoResposta}s</p>
+            <p>3️⃣ <strong>Visualize 6-8 produtos</strong> ranqueados por relevância com {indicadoresIA.precisao}% de precisão</p>
             <p>4️⃣ <strong>Adicione ao orçamento</strong> os produtos de interesse</p>
             <p>5️⃣ <strong>Imprima a lista</strong> ou <strong>vá para Feedback</strong> após o atendimento</p>
           </div>

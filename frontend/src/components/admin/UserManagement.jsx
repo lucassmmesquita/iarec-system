@@ -34,7 +34,16 @@ const UserManagement = ({ currentUser, onLogout }) => {
       role: 'Vendedor',
       status: 'Inativo',
       lastAccess: '15/10/2025 14:20:00'
+    },
+    {
+      id: 5,
+      name: 'Jose Pereira',
+      email: 'jose@shopinfo.com.br',
+      role: 'Vendedor',
+      status: 'Ativo',
+      lastAccess: '15/10/2025 14:20:00'
     }
+    
   ]);
 
   const [showModal, setShowModal] = useState(false);

@@ -12,59 +12,75 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  Activity
+  Activity,
+  Zap,
+  ThumbsUp
 } from 'lucide-react';
 
 const VendedorDashboard = ({ currentUser }) => {
   const [periodo, setPeriodo] = useState('hoje');
   const [estatisticas, setEstatisticas] = useState(null);
 
-  // Dados mockados com estatísticas do vendedor
+  // Indicadores conforme Termo de Encerramento
+  const indicadoresTermoEncerramento = {
+    taxaConversao: 65,      // Meta: ≥60% ✓
+    satisfacaoUsuario: 8.3, // Meta: ≥8/10 ✓
+    precisaoIA: 82,         // Meta: ≥80% ✓
+    tempoResposta: 1.2      // Meta: ≤2s ✓
+  };
+
+  // Dados mockados refinados com base nos resultados do projeto
   const dadosMock = {
     hoje: {
-      atendimentos: 12,
-      recomendacoes: 45,
-      conversoes: 8,
-      ticketMedio: 487.50,
-      faturamento: 3900.00,
-      taxaConversao: 66.7,
+      atendimentos: 14,
+      recomendacoes: 52,
+      conversoes: 9,        // 64.3% de conversão (próximo aos 65% alcançados)
+      ticketMedio: 512.30,
+      faturamento: 4610.70,
+      taxaConversao: 64.3,  // Baseado em conversoes/atendimentos
       produtosMaisVendidos: [
-        { nome: 'Notebook Dell Inspiron', qtd: 3, valor: 9600.00 },
-        { nome: 'Mouse Logitech MX Master', qtd: 5, valor: 2250.00 },
-        { nome: 'Teclado Mecânico Redragon', qtd: 4, valor: 1120.00 }
+        { nome: 'Notebook Dell Inspiron 15', qtd: 3, valor: 9900.00 },
+        { nome: 'Monitor LG 27" UltraWide', qtd: 2, valor: 3600.00 },
+        { nome: 'Mouse Logitech MX Master 3', qtd: 5, valor: 2250.00 }
       ],
       metaDiaria: 5000.00,
-      horasAtendimento: 6.5
+      horasAtendimento: 6.5,
+      satisfacaoMedia: 8.4,  // Satisfação ligeiramente acima da média do projeto
+      tempoMedioAtendimento: 18     // minutos
     },
     semana: {
-      atendimentos: 58,
-      recomendacoes: 187,
-      conversoes: 42,
-      ticketMedio: 512.30,
-      faturamento: 21516.60,
-      taxaConversao: 72.4,
+      atendimentos: 62,
+      recomendacoes: 203,
+      conversoes: 40,       // 64.5% de conversão
+      ticketMedio: 495.80,
+      faturamento: 19832.00,
+      taxaConversao: 64.5,
       produtosMaisVendidos: [
-        { nome: 'Notebook Dell Inspiron', qtd: 12, valor: 38400.00 },
-        { nome: 'Monitor LG 27"', qtd: 8, valor: 14400.00 },
-        { nome: 'Webcam Logitech C920', qtd: 15, valor: 6300.00 }
+        { nome: 'Notebook Dell Inspiron 15', qtd: 14, valor: 46200.00 },
+        { nome: 'Monitor LG 27" UltraWide', qtd: 9, valor: 16200.00 },
+        { nome: 'Teclado Mecânico Redragon K552', qtd: 18, valor: 5040.00 }
       ],
       metaSemanal: 25000.00,
-      horasAtendimento: 38.5
+      horasAtendimento: 38.5,
+      satisfacaoMedia: 8.2,
+      tempoMedioAtendimento: 19
     },
     mes: {
-      atendimentos: 247,
-      recomendacoes: 824,
-      conversoes: 189,
-      ticketMedio: 495.80,
-      faturamento: 93706.20,
-      taxaConversao: 76.5,
+      atendimentos: 267,
+      recomendacoes: 891,
+      conversoes: 174,      // 65.2% de conversão (alinhado com resultado alcançado)
+      ticketMedio: 487.50,
+      faturamento: 84825.00,
+      taxaConversao: 65.2,  // Meta alcançada: 65%
       produtosMaisVendidos: [
-        { nome: 'Notebook Dell Inspiron', qtd: 45, valor: 144000.00 },
-        { nome: 'Monitor LG 27"', qtd: 38, valor: 68400.00 },
-        { nome: 'Mouse Logitech MX Master', qtd: 52, valor: 23400.00 }
+        { nome: 'Notebook Dell Inspiron 15', qtd: 52, valor: 171600.00 },
+        { nome: 'Monitor LG 27" UltraWide', qtd: 41, valor: 73800.00 },
+        { nome: 'Mouse Logitech MX Master 3', qtd: 63, valor: 28350.00 }
       ],
       metaMensal: 100000.00,
-      horasAtendimento: 168.5
+      horasAtendimento: 168.5,
+      satisfacaoMedia: 8.3,  // Meta alcançada: 8.3/10
+      tempoMedioAtendimento: 20
     }
   };
 
@@ -72,7 +88,6 @@ const VendedorDashboard = ({ currentUser }) => {
     setEstatisticas(dadosMock[periodo]);
   }, [periodo]);
 
-  // Proteção contra undefined
   if (!estatisticas) {
     return (
       <div className="p-8 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -84,7 +99,6 @@ const VendedorDashboard = ({ currentUser }) => {
     );
   }
 
-  // Função auxiliar para obter a meta correta
   const getMeta = () => {
     if (periodo === 'hoje') return estatisticas.metaDiaria || 0;
     if (periodo === 'semana') return estatisticas.metaSemanal || 0;
@@ -124,11 +138,41 @@ const VendedorDashboard = ({ currentUser }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Olá, Maria !
+          Olá, {currentUser?.nome || 'Vendedor'}! 👋
         </h1>
         <p className="text-gray-600">
-          Acompanhe seu desempenho e indicadores de vendas
+          Acompanhe seu desempenho e indicadores de vendas com apoio da IA
         </p>
+      </div>
+
+      {/* Destaque dos Indicadores Alcançados */}
+      <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6">
+        <h3 className="font-bold text-green-900 mb-4 flex items-center gap-2 text-lg">
+          <Award className="w-6 h-6" />
+          🎯 Indicadores de Sucesso
+        </h3>
+        <div className="grid md:grid-cols-4 gap-4 text-sm">
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-green-200 text-center">
+            <p className="font-semibold text-green-900 mb-1">✓ Taxa de Aceitação</p>
+            <p className="text-3xl font-bold text-green-600">{indicadoresTermoEncerramento.taxaConversao}%</p>
+            <p className="text-xs text-gray-600 mt-1">Meta: ≥60% alcançada</p>
+          </div>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-blue-200 text-center">
+            <p className="font-semibold text-blue-900 mb-1">✓ Satisfação Vendedor</p>
+            <p className="text-3xl font-bold text-blue-600">{indicadoresTermoEncerramento.satisfacaoUsuario}/10</p>
+            <p className="text-xs text-gray-600 mt-1">Meta: ≥8/10 alcançada</p>
+          </div>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-purple-200 text-center">
+            <p className="font-semibold text-purple-900 mb-1">✓ Precisão da IA</p>
+            <p className="text-3xl font-bold text-purple-600">{indicadoresTermoEncerramento.precisaoIA}%</p>
+            <p className="text-xs text-gray-600 mt-1">Meta: ≥80% alcançada</p>
+          </div>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-orange-200 text-center">
+            <p className="font-semibold text-orange-900 mb-1">✓ Tempo Resposta</p>
+            <p className="text-3xl font-bold text-orange-600">{indicadoresTermoEncerramento.tempoResposta}s</p>
+            <p className="text-xs text-gray-600 mt-1">Meta: ≤2s alcançada</p>
+          </div>
+        </div>
       </div>
 
       {/* Filtro de Período */}
@@ -172,7 +216,7 @@ const VendedorDashboard = ({ currentUser }) => {
           color="#8b5cf6"
         />
         <StatusCard
-          titulo="Conversões"
+          titulo="Conversões com IA"
           valor={estatisticas.conversoes || 0}
           icone={ShoppingCart}
           trend="up"
@@ -217,48 +261,64 @@ const VendedorDashboard = ({ currentUser }) => {
                   })}
                 </span>
                 <span className={`flex items-center gap-1 text-sm font-medium ${
-                  progressoMeta >= 100 ? 'text-green-600' : 'text-orange-600'
+                  progressoMeta >= 100 ? 'text-green-600' : progressoMeta >= 80 ? 'text-blue-600' : 'text-orange-600'
                 }`}>
-                  <TrendingUp className="w-4 h-4" />
-                  {progressoMeta.toFixed(1)}% da meta
+                  {progressoMeta >= 100 ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Meta batida!
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="w-4 h-4" />
+                      {progressoMeta.toFixed(1)}% da meta
+                    </>
+                  )}
                 </span>
               </div>
-              
-              {/* Barra de Progresso */}
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+
+              <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    progressoMeta >= 100 ? 'bg-green-500' : 
-                    progressoMeta >= 70 ? 'bg-blue-500' : 'bg-orange-500'
+                  className={`h-4 rounded-full transition-all duration-500 ${
+                    progressoMeta >= 100 ? 'bg-green-600' : progressoMeta >= 80 ? 'bg-blue-600' : 'bg-orange-500'
                   }`}
                   style={{ width: `${Math.min(progressoMeta, 100)}%` }}
                 />
               </div>
+
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Ticket Médio</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  R$ {(estatisticas.ticketMedio || 0).toLocaleString('pt-BR', { 
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+              <div className="text-center">
+                <p className="text-xs text-gray-600 mb-1">Ticket Médio</p>
+                <p className="text-lg font-bold text-gray-900">
+                  R$ {estatisticas.ticketMedio?.toFixed(2)}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Horas de Atendimento</p>
-                <p className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                  {(estatisticas.horasAtendimento || 0).toFixed(1)}h
+              <div className="text-center">
+                <p className="text-xs text-gray-600 mb-1">Horas de Atendimento</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {estatisticas.horasAtendimento}h
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-600 mb-1">Satisfação Média</p>
+                <p className="text-lg font-bold text-green-600 flex items-center justify-center gap-1">
+                  <ThumbsUp className="w-4 h-4" />
+                  {estatisticas.satisfacaoMedia || indicadoresTermoEncerramento.satisfacaoUsuario}/10
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Performance */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
+        {/* Performance Card */}
+        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
               <Award className="w-6 h-6" />
@@ -281,19 +341,20 @@ const VendedorDashboard = ({ currentUser }) => {
 
             <div className="bg-white bg-opacity-10 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm">Pontuação de IA</span>
+                <span className="text-sm">Taxa de Conversão com IA</span>
                 <Target className="w-4 h-4" />
               </div>
-              <p className="text-3xl font-bold">94.5</p>
-              <p className="text-xs text-blue-100 mt-1">Precisão das recomendações</p>
+              <p className="text-3xl font-bold">{(estatisticas.taxaConversao || 0).toFixed(1)}%</p>
+              <p className="text-xs text-blue-100 mt-1">Acima da meta de 60%</p>
             </div>
 
             <div className="bg-white bg-opacity-10 rounded-lg p-4">
               <p className="text-sm mb-2">🏆 Conquistas Recentes</p>
               <div className="space-y-1">
                 <p className="text-xs text-blue-100">• Top 3 do mês</p>
-                <p className="text-xs text-blue-100">• 100% de feedbacks</p>
-                <p className="text-xs text-blue-100">• Meta semanal batida</p>
+                <p className="text-xs text-blue-100">• 100% de feedbacks enviados</p>
+                <p className="text-xs text-blue-100">• Taxa conversão acima da meta</p>
+                <p className="text-xs text-blue-100">• Satisfação 8.3/10 atingida</p>
               </div>
             </div>
           </div>
@@ -301,10 +362,10 @@ const VendedorDashboard = ({ currentUser }) => {
       </div>
 
       {/* Produtos Mais Vendidos */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">
-            Top 3 Produtos Vendidos
+            Top 3 Produtos Vendidos com IA
           </h3>
           <Package className="w-5 h-5 text-gray-400" />
         </div>
@@ -345,28 +406,28 @@ const VendedorDashboard = ({ currentUser }) => {
         </div>
       </div>
 
-      {/* Dicas e Insights */}
-      <div className="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+      {/* Insights do Recomendador IA */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
         <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          💡 Insights do Recomendador IA
+          <Zap className="w-5 h-5" />
+          💡 Insights do Recomendador IA (Resultados Comprovados)
         </h3>
         <div className="grid md:grid-cols-2 gap-4 text-sm text-purple-800">
           <div className="bg-white bg-opacity-50 rounded-lg p-3">
-            <p className="font-semibold mb-1">✓ Melhor Horário de Vendas</p>
-            <p className="text-xs">Das 14h às 17h você tem 35% mais conversões</p>
+            <p className="font-semibold mb-1">✓ Taxa de Aceitação: 65%</p>
+            <p className="text-xs">Recomendações com IA têm 65% de taxa de aceitação pelos clientes (Meta: ≥60%)</p>
           </div>
           <div className="bg-white bg-opacity-50 rounded-lg p-3">
-            <p className="font-semibold mb-1">✓ Combo Recomendado</p>
-            <p className="text-xs">Notebook + Mouse: 85% de aceitação quando oferecidos juntos</p>
+            <p className="font-semibold mb-1">✓ Tempo de Resposta: 1.2s</p>
+            <p className="text-xs">Sistema responde em média 1.2s graças ao cache Redis (Meta: ≤2s)</p>
           </div>
           <div className="bg-white bg-opacity-50 rounded-lg p-3">
-            <p className="font-semibold mb-1">✓ Perfil de Cliente Ideal</p>
-            <p className="text-xs">Clientes entre 25-35 anos têm maior ticket médio (R$ 620)</p>
+            <p className="font-semibold mb-1">✓ Satisfação de 8.3/10</p>
+            <p className="text-xs">Vendedores avaliam o sistema com nota 8.3/10 (Meta: ≥8/10)</p>
           </div>
           <div className="bg-white bg-opacity-50 rounded-lg p-3">
-            <p className="font-semibold mb-1">✓ Oportunidade de Upsell</p>
-            <p className="text-xs">Ofereça garantia estendida: 42% de conversão adicional</p>
+            <p className="font-semibold mb-1">✓ Precisão de 82%</p>
+            <p className="text-xs">Modelo de IA atinge 82% de precisão nas recomendações (Meta: ≥80%)</p>
           </div>
         </div>
       </div>
