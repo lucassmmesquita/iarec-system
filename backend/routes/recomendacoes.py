@@ -1220,6 +1220,298 @@ def gerar_recomendacao(cliente: ClienteInfo, quantidade: int = Query(default=5, 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar recomendação: {str(e)}")
 
+@router.get("/cliente/{id_cliente}", response_model=List[RecomendacaoResponse])
+def listar_recomendacoes_cliente(
+    id_cliente: str,
+    limite: int = Query(default=10, ge=1, le=50, description="Máximo de recomendações a retornar"),
+    ordem: str = Query(default="recente", regex="^(recente|antiga|confianca)$", description="Ordenação: recente, antiga ou confianca")
+):
+    """
+    Lista todas as recomendações geradas para um cliente específico
+    
+    **Parâmetros:**
+    - `id_cliente`: ID único do cliente (ex: CLI001, CLI002, etc)
+    - `limite`: Quantidade máxima de resultados (1-50, padrão: 10)
+    - `ordem`: Critério de ordenação
+      - `recente`: Mais recentes primeiro (padrão)
+      - `antiga`: Mais antigas primeiro
+      - `confianca`: Maior confiança da IA primeiro
+    
+    **Retorna:**
+    - Lista de recomendações com produtos e metadados
+    - Array vazio se cliente não tiver recomendações
+    
+    **Exemplos de IDs válidos:**
+    - CLI001 (Maria Santos)
+    - CLI002 (João Silva)
+    - CLI003 (Ana Costa)
+    - CLI004 (Pedro Oliveira)
+    - CLI005 (Carlos Mendes)
+    - CLI006 (Juliana Ferreira)
+    - CLI007 (Roberto Lima)
+    - CLI008 (Fernanda Alves)
+    
+    **Exemplo de uso:**
+    ```
+    GET /api/recomendacoes/cliente/CLI001?limite=5&ordem=recente
+    ```
+    """
+    
+    # Filtrar recomendações do histórico para este cliente
+    recomendacoes_cliente = [
+        rec for rec in RECOMENDACOES_HISTORICO 
+        if rec["id_cliente"] == id_cliente
+    ]
+    
+    # Se não encontrou nenhuma recomendação
+    if not recomendacoes_cliente:
+        # Verificar se é um ID de cliente válido (formato CLIxxx)
+        import re
+        if not re.match(r'^CLI\d{3}$', id_cliente):
+            raise HTTPException(
+                status_code=400,
+                detail=f"ID de cliente inválido: '{id_cliente}'. Use o formato CLIxxx (ex: CLI001)"
+            )
+        
+        # Cliente válido mas sem recomendações
+        raise HTTPException(
+            status_code=404,
+            detail=f"Nenhuma recomendação encontrada para o cliente '{id_cliente}'. "
+                   f"Use o endpoint POST /api/recomendacoes/gerar para criar novas recomendações."
+        )
+    
+    # Aplicar ordenação
+    if ordem == "recente":
+        # Ordenar por data de geração (mais recente primeiro)
+        recomendacoes_cliente.sort(
+            key=lambda x: x["data_geracao"], 
+            reverse=True
+        )
+    elif ordem == "antiga":
+        # Ordenar por data de geração (mais antiga primeiro)
+        recomendacoes_cliente.sort(
+            key=lambda x: x["data_geracao"]
+        )
+    elif ordem == "confianca":
+        # Ordenar por confiança média da IA (maior primeiro)
+        recomendacoes_cliente.sort(
+            key=lambda x: x["metadados"]["confianca_media"],
+            reverse=True
+        )
+    
+    # Aplicar limite
+    recomendacoes_limitadas = recomendacoes_cliente[:limite]
+    
+    # Retornar lista de recomendações
+    return recomendacoes_limitadas
+
+
+@router.get("/cliente/{id_cliente}/resumo")
+def obter_resumo_cliente(id_cliente: str):
+    """
+    Retorna resumo estatístico das recomendações de um cliente
+    
+    **Parâmetros:**
+    - `id_cliente`: ID único do cliente
+    
+    **Retorna:**
+    - Total de recomendações geradas
+    - Total de produtos recomendados
+    - Confiança média da IA
+    - Desconto médio aplicado
+    - Categorias mais recomendadas
+    - Taxa de aceitação (baseada em feedbacks)
+    - Última recomendação
+    
+    **Exemplo:**
+    ```
+    GET /api/recomendacoes/cliente/CLI001/resumo
+    ```
+    """
+    
+    # Filtrar recomendações do cliente
+    recomendacoes_cliente = [
+        rec for rec in RECOMENDACOES_HISTORICO 
+        if rec["id_cliente"] == id_cliente
+    ]
+    
+    if not recomendacoes_cliente:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Cliente '{id_cliente}' não encontrado no histórico de recomendações"
+        )
+    
+    # Calcular estatísticas
+    total_recomendacoes = len(recomendacoes_cliente)
+    
+    # Total de produtos
+    total_produtos = sum(
+        len(rec["produtos_recomendados"]) 
+        for rec in recomendacoes_cliente
+    )
+    
+    # Confiança média
+    confiancas = [
+        rec["metadados"]["confianca_media"] 
+        for rec in recomendacoes_cliente
+    ]
+    confianca_media = round(sum(confiancas) / len(confiancas), 2)
+    
+    # Desconto médio
+    descontos = [
+        rec["metadados"]["desconto_medio"] 
+        for rec in recomendacoes_cliente
+    ]
+    desconto_medio = round(sum(descontos) / len(descontos), 2)
+    
+    # Categorias mais recomendadas
+    categorias_count = {}
+    for rec in recomendacoes_cliente:
+        for produto in rec["produtos_recomendados"]:
+            cat = produto["categoria"]
+            categorias_count[cat] = categorias_count.get(cat, 0) + 1
+    
+    categorias_top = sorted(
+        categorias_count.items(), 
+        key=lambda x: x[1], 
+        reverse=True
+    )[:5]
+    
+    # Feedbacks do cliente
+    feedbacks_cliente = [
+        fb for fb in FEEDBACKS_HISTORICO
+        if any(
+            rec["id_recomendacao"] == fb["id_recomendacao"]
+            for rec in recomendacoes_cliente
+        )
+    ]
+    
+    # Taxa de aceitação
+    total_feedbacks = len(feedbacks_cliente)
+    feedbacks_aceitos = len([fb for fb in feedbacks_cliente if fb["aceito"]])
+    feedbacks_comprados = len([fb for fb in feedbacks_cliente if fb.get("comprado")])
+    
+    taxa_aceitacao = round((feedbacks_aceitos / total_feedbacks * 100), 1) if total_feedbacks > 0 else 0
+    taxa_conversao = round((feedbacks_comprados / total_feedbacks * 100), 1) if total_feedbacks > 0 else 0
+    
+    # Última recomendação
+    ultima_recomendacao = max(
+        recomendacoes_cliente, 
+        key=lambda x: x["data_geracao"]
+    )
+    
+    # Perfil do cliente (do último registro)
+    perfil_cliente = ultima_recomendacao["metadados"]["perfil_cliente"]
+    
+    return {
+        "id_cliente": id_cliente,
+        "nome_cliente": ultima_recomendacao["nome_cliente"],
+        "resumo": {
+            "total_recomendacoes": total_recomendacoes,
+            "total_produtos_recomendados": total_produtos,
+            "confianca_media_ia": confianca_media,
+            "desconto_medio_aplicado": desconto_medio,
+            "ultima_recomendacao": ultima_recomendacao["data_geracao"]
+        },
+        "categorias_favoritas": [
+            {"categoria": cat, "quantidade": qtd}
+            for cat, qtd in categorias_top
+        ],
+        "performance": {
+            "total_feedbacks": total_feedbacks,
+            "feedbacks_positivos": feedbacks_aceitos,
+            "compras_realizadas": feedbacks_comprados,
+            "taxa_aceitacao_percent": taxa_aceitacao,
+            "taxa_conversao_percent": taxa_conversao
+        },
+        "perfil": perfil_cliente
+    }
+
+
+@router.get("/cliente/{id_cliente}/produtos")
+def listar_produtos_recomendados_cliente(
+    id_cliente: str,
+    categoria: Optional[str] = Query(None, description="Filtrar por categoria"),
+    min_confianca: float = Query(0.0, ge=0.0, le=100.0, description="Confiança mínima da IA"),
+    limite: int = Query(50, ge=1, le=100)
+):
+    """
+    Lista TODOS os produtos já recomendados para um cliente (consolidado)
+    
+    **Parâmetros:**
+    - `id_cliente`: ID único do cliente
+    - `categoria`: Filtrar por categoria específica (opcional)
+    - `min_confianca`: Confiança mínima da IA (0-100, padrão: 0)
+    - `limite`: Máximo de produtos (1-100, padrão: 50)
+    
+    **Retorna:**
+    - Lista consolidada de todos produtos já recomendados
+    - Ordenados por confiança da IA (maior primeiro)
+    - Remove duplicatas (mesmo produto recomendado múltiplas vezes)
+    
+    **Exemplo:**
+    ```
+    GET /api/recomendacoes/cliente/CLI001/produtos?categoria=Notebooks&min_confianca=85
+    ```
+    """
+    
+    # Filtrar recomendações do cliente
+    recomendacoes_cliente = [
+        rec for rec in RECOMENDACOES_HISTORICO 
+        if rec["id_cliente"] == id_cliente
+    ]
+    
+    if not recomendacoes_cliente:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Cliente '{id_cliente}' não possui recomendações"
+        )
+    
+    # Consolidar todos os produtos (usar dict para evitar duplicatas)
+    produtos_consolidados = {}
+    
+    for rec in recomendacoes_cliente:
+        for produto in rec["produtos_recomendados"]:
+            id_prod = produto["id_produto"]
+            
+            # Se produto já existe, manter o de maior confiança
+            if id_prod not in produtos_consolidados or \
+               produto["confianca_ia"] > produtos_consolidados[id_prod]["confianca_ia"]:
+                produtos_consolidados[id_prod] = produto
+    
+    # Converter para lista
+    produtos_lista = list(produtos_consolidados.values())
+    
+    # Aplicar filtro de categoria
+    if categoria:
+        produtos_lista = [
+            p for p in produtos_lista 
+            if p["categoria"].lower() == categoria.lower()
+        ]
+    
+    # Aplicar filtro de confiança mínima
+    produtos_lista = [
+        p for p in produtos_lista 
+        if p["confianca_ia"] >= min_confianca
+    ]
+    
+    # Ordenar por confiança (maior primeiro)
+    produtos_lista.sort(key=lambda x: x["confianca_ia"], reverse=True)
+    
+    # Aplicar limite
+    produtos_limitados = produtos_lista[:limite]
+    
+    return {
+        "id_cliente": id_cliente,
+        "total_produtos_unicos": len(produtos_limitados),
+        "filtros_aplicados": {
+            "categoria": categoria,
+            "confianca_minima": min_confianca,
+            "limite": limite
+        },
+        "produtos": produtos_limitados
+    }
+
 @router.post("/feedback", response_model=FeedbackResponse)
 def registrar_feedback(feedback: FeedbackRequest):
     """

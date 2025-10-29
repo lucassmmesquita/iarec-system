@@ -15,6 +15,8 @@ from routes.usuarios import router as usuarios_router
 
 from routes.recomendacoes import router as recomendacoes_router
 
+from routes.fontes import router as fontes_router
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -52,6 +54,9 @@ app.add_middleware(
 app.include_router(usuarios_router)  # Endpoints de usuários
 
 app.include_router(recomendacoes_router)  # Endpoints de recomendacoes
+
+app.include_router(fontes_router) # Endpoints de fontes de dados
+
 
 # Futuros routers (quando criar os arquivos):
 # from routes.fontes import router as fontes_router
